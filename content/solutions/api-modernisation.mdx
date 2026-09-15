@@ -1,0 +1,35 @@
+---
+title: "API modernisation"
+description: "Turning point-to-point integrations and ageing SOAP services into a governed API estate, with the contracts, versioning and access control that implies."
+publishedAt: "2026-09-15"
+status: "draft"
+order: 2
+bestFit: "Teams whose integration estate has grown into a mesh of point-to-point connections that nobody can safely change, and who need consumable, contract-first APIs."
+relatedMigrations: ["tibco-to-mulesoft"]
+---
+
+Most estates of any age contain two generations of integration: SOAP services
+written when that was the standard, and point-to-point connections added later
+because they were faster than going through governance.
+
+Both work. Neither is consumable by anyone who did not build it.
+
+## What the programme involves
+
+The work is less about protocol translation than about deciding what the
+contracts should be. A mechanical SOAP-to-REST conversion produces REST-shaped
+endpoints that still expose the internals of the system behind them.
+
+1. **Identify the real consumers.** Which systems call what, how often, and what
+   they actually need — as opposed to what the current interface returns.
+2. **Define contracts deliberately**, versioned, with a deprecation path.
+3. **Implement against the contract**, with the old interface running alongside
+   until consumers have moved.
+4. **Put governance in place** — access control, rate limits, monitoring — so the
+   new estate does not decay into the old one.
+
+## What this does not solve
+
+An API layer over an unchanged backend inherits that backend's constraints. If
+the underlying system cannot answer a question quickly, wrapping it in a modern
+interface does not change that.

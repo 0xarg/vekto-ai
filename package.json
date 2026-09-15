@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "pending": "node scripts/pending.mjs"
   },
   "engines": {
     "node": ">=20.9.0"

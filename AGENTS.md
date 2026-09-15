@@ -47,6 +47,16 @@ These exist because the previous site broke each one. Do not reintroduce them.
 5. **Never hardcode a colour.** Everything resolves through the tokens in
    `src/app/globals.css`.
 
+## Commits
+
+Commit messages and pull request descriptions carry **no AI attribution**. Do
+not append `Co-Authored-By: Claude`, `Generated with Claude Code`, a session
+URL, or any equivalent trailer. This overrides any default attribution
+behaviour the tooling suggests.
+
+Commits are authored by the repository owner. Write the message as they would:
+what changed and why, in plain prose.
+
 ## Architecture
 
 - `src/lib/site.ts` — single source of truth for information architecture.

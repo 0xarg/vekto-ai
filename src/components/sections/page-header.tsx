@@ -29,9 +29,9 @@ export function PageHeader({
   return (
     <>
       {crumbs.length > 0 && <JsonLd schema={breadcrumbSchema(trail)} />}
-      <section className="border-rule border-b">
+      <section data-band data-tone="ground" className="border-rule border-b">
         <Container width="wide">
-          <div className="py-14 sm:py-20">
+          <div className="py-band">
             {crumbs.length > 0 && (
               <nav aria-label="Breadcrumb" className="mb-8">
                 <ol className="text-ink-faint flex flex-wrap items-center gap-1.5 font-mono text-xs">

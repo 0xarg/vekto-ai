@@ -8,8 +8,12 @@ import { JsonLd } from "@/components/ui/json-ld";
 import { PageHeader } from "@/components/sections/page-header";
 import { Section } from "@/components/ui/section";
 import { Pending } from "@/components/ui/pending";
+import { PendingSection } from "@/components/ui/pending-section";
+import { Readout } from "@/components/ui/label";
+import { PlatformPole } from "@/components/sections/migration-ledger";
 import { PipelineStrip } from "@/components/sections/pipeline-strip";
 import { CtaBand } from "@/components/sections/cta-band";
+import { stageIndex } from "@/lib/derived";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -36,7 +40,7 @@ export default async function MigrationPage({ params }: Params) {
   const migration = getMigration(slug);
   if (!migration) notFound();
 
-  const { sourcePlatform, targetPlatform } = migration;
+  const { sourcePlatform, targetPlatform, sourceArtifacts } = migration;
 
   return (
     <>
@@ -60,19 +64,32 @@ export default async function MigrationPage({ params }: Params) {
           },
         ]}
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-legacy bg-legacy-soft border-legacy-line rounded-sm border px-3 py-1.5 font-mono text-sm">
-            {sourcePlatform.name}
-          </span>
-          <span className="text-ink-faint font-mono text-sm">&rarr;</span>
-          <span className="text-accent bg-accent-soft border-accent-line rounded-sm border px-3 py-1.5 font-mono text-sm">
-            {targetPlatform.name}
-          </span>
+        {/* The same pair-and-count idiom the index ledger uses, so the row you
+            clicked and the page you land on state the pair identically. */}
+        <div className="border-rule grid gap-6 border-t pt-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-10">
+          <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-start sm:gap-6">
+            <PlatformPole platform={sourcePlatform} pole="source" />
+            <span
+              aria-hidden
+              className="text-ink-faint hidden self-center font-mono text-sm sm:block"
+            >
+              &rarr;
+            </span>
+            <PlatformPole platform={targetPlatform} pole="target" />
+          </div>
+          <Readout
+            orientation="stacked"
+            value={sourceArtifacts.length}
+            label="artifact classes"
+            className="lg:text-right"
+          />
         </div>
       </PageHeader>
 
+      <PipelineStrip />
+
       {migration.status === "draft" && (
-        <Section bordered={false} className="py-8!">
+        <Section bordered={false} density="tight">
           <Pending
             item={`Confirm Vekto supports ${sourcePlatform.shortName} to ${targetPlatform.shortName}`}
             due="5 Sep"
@@ -82,45 +99,52 @@ export default async function MigrationPage({ params }: Params) {
       )}
 
       <Section
+        bordered={false}
+        tone="legacy"
+        density="loose"
         eyebrow="Source estate"
         heading={`What we read on the ${sourcePlatform.shortName} side`}
-        lede="Discovery inventories these artefacts and the dependencies between them before anything is changed."
+        lede="Discovery inventories these artifacts and the dependencies between them before anything is changed."
       >
-        <ul className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
-          {migration.sourceArtifacts.map((artifact) => (
+        {/* A numbered inventory rather than a card grid: the count is real, it
+            differs from pair to pair, and an enumerated list is what this
+            section actually is. The index is the item's position in the pair's
+            own `sourceArtifacts`. */}
+        <ol className="divide-rule border-rule divide-y border-y">
+          {sourceArtifacts.map((artifact, i) => (
             <li
               key={artifact}
-              className="border-rule bg-surface flex items-start gap-3 border p-5 text-sm"
+              className="flex items-baseline gap-5 py-4 sm:gap-8"
             >
-              <span className="text-legacy mt-1.5 h-1 w-1 shrink-0 rounded-full bg-current" />
-              <span className="text-ink-muted leading-relaxed">{artifact}</span>
+              <span className="text-legacy text-label shrink-0 font-mono">
+                {stageIndex(i + 1)}
+              </span>
+              <span className="text-ink text-sm leading-relaxed sm:text-base">
+                {artifact}
+              </span>
             </li>
           ))}
-        </ul>
+        </ol>
       </Section>
 
-      <Section
+      <PendingSection
         tone="surface"
         eyebrow="Process"
         heading="How the migration runs"
         lede="The same five stages run on every path. What changes between paths is the mapping strategy Analysis selects and the conventions Transformation writes to."
-      >
-        <Pending
-          item={`Platform-specific mapping detail for ${sourcePlatform.shortName} to ${targetPlatform.shortName}`}
-          due="15 Sep"
-          note="Needs an engineer to describe how each source artefact class maps onto the target. This is the section that makes the page rank and makes it credible."
-        />
-      </Section>
+        item={`Platform-specific mapping detail for ${sourcePlatform.shortName} to ${targetPlatform.shortName}`}
+        due="15 Sep"
+        note="Needs an engineer to describe how each source artifact class maps onto the target. This is the section that makes the page rank and makes it credible."
+      />
 
-      <PipelineStrip />
-
-      <Section eyebrow="Evidence" heading="Migrations we have run on this path">
-        <Pending
-          item={`A customer story for ${sourcePlatform.shortName} to ${targetPlatform.shortName}`}
-          due="10 Sep"
-          note="Anonymised is fine. Without it this page argues capability without proof."
-        />
-      </Section>
+      <PendingSection
+        bordered={false}
+        eyebrow="Evidence"
+        heading="Migrations we have run on this path"
+        item={`A customer story for ${sourcePlatform.shortName} to ${targetPlatform.shortName}`}
+        due="10 Sep"
+        note="Anonymized is fine. Without it this page argues capability without proof."
+      />
 
       <CtaBand />
     </>

@@ -66,7 +66,7 @@ export default async function SolutionPage({ params }: Params) {
         <Section
           bordered
           tone="surface"
-          heading="Migration paths this programme covers"
+          heading="Migration paths this program covers"
         >
           <ul className="flex flex-wrap gap-3">
             {fm.relatedMigrations.map((m) => (

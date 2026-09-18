@@ -44,15 +44,20 @@ These exist because the previous site broke each one. Do not reintroduce them.
    navigation or the footer.
 4. **Every page builds metadata through `buildMetadata()`** in `src/lib/seo.ts`.
    The old site had one unchanging `<title>` across all routes.
-5. **Never hardcode a colour.** Everything resolves through the tokens in
+5. **Never hardcode a color.** Everything resolves through the tokens in
    `src/app/globals.css`.
+6. **Every visual element resolves from a real value.** A numeral or graphic
+   mark may only appear if it comes from `src/content/*` via `src/lib/derived.ts`
+   — counts, positions, inventories, source/target polarity. Nothing on the page
+   is ornament. The previous hero drew a 4rem hairline grid that encoded nothing;
+   it is gone. If a figure cannot be sourced it is a `<Pending>`, not a stat.
 
 ## Commits
 
 Commit messages and pull request descriptions carry **no AI attribution**. Do
 not append `Co-Authored-By: Claude`, `Generated with Claude Code`, a session
 URL, or any equivalent trailer. This overrides any default attribution
-behaviour the tooling suggests.
+behavior the tooling suggests.
 
 Commits are authored by the repository owner. Write the message as they would:
 what changed and why, in plain prose.
@@ -86,6 +91,10 @@ Turbopack is the default builder. `params` is a **Promise** in every
 
 ## Writing rules
 
+**American spelling** (artifact, anonymized, modernization, program, behavior).
+Settled — the buying audience is US and Western European. The registry field was
+already `sourceArtifacts`, so this aligns copy with existing code.
+
 Sentence case headings. No emoji, no exclamation marks, anywhere on the site.
 Second person, active voice. One idea per paragraph. Lead with the constraint,
 not the benefit — a stated limit is what makes the surrounding claims credible.
@@ -96,16 +105,43 @@ Page section plans live in the SEO blueprint artifact, not here.
 
 ## Open decisions
 
-- **Spelling convention is unresolved.** The codebase currently uses British
-  forms (artefact, anonymised, modernisation). The buying audience is US and
-  Western European, so American is the safer default. Pick one before the
-  content layer is written — changing it later means touching every page.
-- **The five agent detail pages risk reading as near-duplicates** to search
-  engines. Each needs a distinct worked example. If the client cannot supply
-  five, collapse them into one `/agents` page with anchors.
+- **The five agent detail pages still want a distinct worked example each.**
+  Structurally they now differ: each renders its own numbered inputs/outputs
+  ledger and a position rail marking its stage, both derived from the registry.
+  That is enough to stop them being near-identical markup, but it is not
+  evidence. If the client cannot supply five worked examples, collapsing them
+  into one `/agents` page with anchors is still the fallback.
+- **No OG image exists.** `src/lib/seo.ts` documents one but emits no `images`
+  key, and there is no `opengraph-image` file, so every social share is bare.
+  Needs `opengraph-image.tsx` — remember `params` is a Promise in Next 16.
+
+## Design system
+
+- `src/lib/derived.ts` — counts and positions computed from the registries. The
+  only sanctioned source for a numeral rendered as design.
+- `Readout` in `src/components/ui/label.tsx` — a value with the thing it
+  measures. `Label` is a caption; a `Readout` _is_ data, so the value takes
+  `--ink` and the caption recedes.
+- `.lattice` in `globals.css` — a grid whose background shows through a 1px gap.
+  Use it instead of `gap-px` on bordered children, which doubles every interior
+  hairline to 2px and thickens the perimeter.
+- `Section density` — `tight | default | loose`, mapped to the `--spacing-band*`
+  tokens. A band's height states its editorial weight. Section separators are
+  decided by adjacency in CSS: a rule is drawn only between two consecutive
+  bands sharing a tone, since a tonal change already separates them.
+- `PendingSection` — for a band whose entire body is outstanding content. It
+  collapses in production including its heading, because an empty `<h2>` reads
+  as thin content to a crawler and as an unfinished page to a buyer.
+- `tone="inverse"` on `Button` is required on `--inverse` surfaces. The accent
+  measures 2.15:1 there, below the 3:1 floor for a control's own boundary.
+
+Content is much thinner in production than in preview: `<Pending>` and draft
+migration pairs are both stripped, so preview shows six pairs and production
+one. Check both — `pnpm build && pnpm start` exercises the production path.
 
 ## Not yet built
 
-MDX content layer (dependencies installed, typed loader not written) and the
-four detail templates: `/resources/[slug]`, `/case-studies/[slug]`,
-`/use-cases/[slug]`, `/solutions/[slug]`. Index pages exist for all four.
+Nothing structural. The MDX content layer and all four detail templates
+(`/resources/[slug]`, `/case-studies/[slug]`, `/use-cases/[slug]`,
+`/solutions/[slug]`) landed in 144e7f5. What is missing is content: see
+`pnpm pending`.

@@ -44,7 +44,7 @@ const sourcedFigure = z.object({
 });
 
 export const caseStudySchema = base.extend({
-  /** Anonymised is fine — "a global life-sciences manufacturer". */
+  /** Anonymized is fine — "a global life-sciences manufacturer". */
   customer: z.string().min(3),
   industry: z.string().min(3),
   sourcePlatform: z.enum(platformIds),

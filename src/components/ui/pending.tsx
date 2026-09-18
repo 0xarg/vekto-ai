@@ -8,6 +8,16 @@ import { cn } from "@/lib/utils";
  * in preview builds, which turns the Vercel preview URL into a live checklist
  * of what is outstanding. Renders nothing in production.
  */
+/**
+ * Whether outstanding-content markers render in this build. Exported so the
+ * section-level wrapper cannot drift from the marker's own rule.
+ */
+export function pendingVisible() {
+  const env =
+    process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV ?? "development";
+  return env !== "production";
+}
+
 export function Pending({
   item,
   owner = "Vekto",
@@ -21,15 +31,13 @@ export function Pending({
   note?: string;
   className?: string;
 }) {
-  const env =
-    process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV ?? "development";
-  if (env === "production") return null;
+  if (!pendingVisible()) return null;
 
   return (
     <div
       data-pending-content
       className={cn(
-        "border-warn/40 bg-warn-soft rounded-sm border border-dashed p-5",
+        "border-warn-line bg-warn-soft rounded-sm border border-dashed p-5",
         className,
       )}
     >

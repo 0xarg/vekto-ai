@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 import { getCollection } from "@/lib/content/loader";
 import { buildMetadata } from "@/lib/seo";
@@ -12,7 +11,7 @@ import { CtaBand } from "@/components/sections/cta-band";
 export const metadata = buildMetadata({
   title: "Solutions",
   description:
-    "Modernisation programmes by shape of problem: legacy middleware modernisation, API modernisation, and like-for-like integration migration.",
+    "Modernization programs by shape of problem: legacy middleware modernization, API modernization, and like-for-like integration migration.",
   path: "/solutions",
 });
 
@@ -25,8 +24,8 @@ export default function SolutionsPage() {
     <>
       <PageHeader
         eyebrow="Solutions"
-        title="Programmes by shape of problem."
-        lede="Migration paths describe platforms. Solutions describe the programme you are actually running, which usually spans more than one path."
+        title="Programs by shape of problem."
+        lede="Migration paths describe platforms. Solutions describe the program you are actually running, which usually spans more than one path."
         crumbs={[{ name: "Solutions", path: "/solutions" }]}
       />
 
@@ -39,12 +38,12 @@ export default function SolutionsPage() {
           />
         ) : (
           <>
-            <div className="grid gap-px lg:grid-cols-3">
+            <div className="lattice lg:grid-cols-3">
               {solutions.map(({ slug, frontmatter: fm }) => (
                 <Link
                   key={slug}
                   href={`/solutions/${slug}`}
-                  className="border-rule bg-surface hover:border-rule-strong group flex flex-col border p-6 transition-colors"
+                  className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
                 >
                   <h2 className="group-hover:text-accent font-serif text-xl transition-colors">
                     {fm.title}
@@ -60,7 +59,7 @@ export default function SolutionsPage() {
                   </div>
                   <span className="text-accent mt-5 inline-flex items-center gap-2 text-sm font-medium">
                     Read more
-                    <ArrowRight className="h-4 w-4" aria-hidden />
+                    <span aria-hidden>&rarr;</span>
                   </span>
                 </Link>
               ))}

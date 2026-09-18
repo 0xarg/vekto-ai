@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { cta, primaryNav } from "@/lib/site";
+import { cta, primaryNav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export function SiteHeader() {
 
       <Container width="wide">
         <div className="flex h-16 items-center justify-between gap-6">
-          <Link href="/" className="shrink-0" aria-label={`${"Vekto AI"} home`}>
+          <Link href="/" className="shrink-0" aria-label={`${site.name} home`}>
             <Wordmark />
           </Link>
 
@@ -120,7 +120,7 @@ export function SiteHeader() {
 
                   {open && (
                     <div
-                      className="border-rule bg-surface absolute top-full left-0 w-80 border shadow-[0_12px_32px_-12px_rgb(20_23_26/0.18)]"
+                      className="border-rule bg-surface shadow-menu absolute top-full left-0 w-80 border"
                       onMouseEnter={cancelClose}
                       onMouseLeave={scheduleClose}
                     >

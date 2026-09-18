@@ -21,7 +21,7 @@ const migrationSchema = z.object({
   headline: z.string().min(10),
   /** Meta description and index-card copy. */
   summary: z.string().min(40).max(300),
-  /** Concrete artefacts the migration has to deal with on the source side.
+  /** Concrete artifacts the migration has to deal with on the source side.
    *  Used to build the "what we handle" section. Factual inventory only. */
   sourceArtifacts: z.array(z.string()).min(1),
 });

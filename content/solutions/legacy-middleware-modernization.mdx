@@ -1,32 +1,32 @@
 ---
-title: "Legacy middleware modernisation"
+title: "Legacy middleware modernization"
 description: "Moving an entire ESB or integration estate off a platform that is end-of-life, unsupported, or priced beyond what it returns — without pausing the business that runs on it."
 publishedAt: "2026-09-15"
 status: "draft"
 order: 1
-bestFit: "Organisations running a large estate on a platform with a support deadline attached to it, where a hand migration would take longer than the deadline allows."
+bestFit: "Organizations running a large estate on a platform with a support deadline attached to it, where a hand migration would take longer than the deadline allows."
 relatedMigrations: ["tibco-to-mulesoft"]
 ---
 
-Middleware modernisation is rarely a technology decision. It starts when a
-vendor announces an end-of-support date, a licence renewal arrives at a number
+Middleware modernization is rarely a technology decision. It starts when a
+vendor announces an end-of-support date, a license renewal arrives at a number
 nobody wants to sign, or the last engineer who understood the estate leaves.
 
 The problem is that the estate is load-bearing. Every integration on it is
 carrying live traffic for something the business depends on, and nobody has a
 complete picture of what depends on what.
 
-## What the programme involves
+## What the program involves
 
 The sequence matters more than the tooling. Attempting to redesign while
-migrating is the most common way these programmes fail — it turns one hard
+migrating is the most common way these programs fail — it turns one hard
 problem into two, and makes it impossible to tell whether a fault came from the
 move or the redesign.
 
 1. **Establish what actually exists.** Not what the documentation says. The
    inventory and the dependency graph come first, and usually contain surprises.
-2. **Move behaviour before changing it.** Get onto the target platform with
-   behaviour preserved, then improve from a position where you can compare
+2. **Move behavior before changing it.** Get onto the target platform with
+   behavior preserved, then improve from a position where you can compare
    against something that works.
 3. **Retire deliberately.** The old platform stays available until the new one
    has run the same load for long enough to trust it.
@@ -40,7 +40,7 @@ change requests queue behind a small number of specialists.
 
 ## What this does not solve
 
-Modernisation does not fix integration designs that were wrong to begin with. A
+Modernization does not fix integration designs that were wrong to begin with. A
 poorly bounded integration moved onto a modern platform is a poorly bounded
-integration with better tooling around it. Redesign is a separate programme, and
+integration with better tooling around it. Redesign is a separate program, and
 it is easier once the first one is finished.

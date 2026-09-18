@@ -101,9 +101,9 @@ export default async function CaseStudyPage({ params }: Params) {
         eyebrow="Results"
         heading="What was measured"
       >
-        <dl className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
+        <dl className="lattice sm:grid-cols-2 lg:grid-cols-3">
           {fm.results.map((r) => (
-            <div key={r.label} className="border-rule bg-surface border p-6">
+            <div key={r.label} className="p-6">
               <dt className="text-label text-ink-faint font-mono uppercase">
                 {r.label}
               </dt>

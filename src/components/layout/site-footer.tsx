@@ -2,7 +2,7 @@ import Link from "next/link";
 import { footerColumns, pendingFooterItems, site } from "@/lib/site";
 import { Container } from "@/components/ui/container";
 import { Label } from "@/components/ui/label";
-import { Pending } from "@/components/ui/pending";
+import { Pending, pendingVisible } from "@/components/ui/pending";
 import { Wordmark } from "./wordmark";
 
 export function SiteFooter() {
@@ -40,21 +40,26 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="border-rule flex flex-col gap-4 border-t py-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-ink-faint text-sm">
-            © {year} {site.name}. All rights reserved.
-          </p>
-          <p className="text-ink-faint text-sm">
-            {pendingFooterItems.map((i) => i.label).join(" · ")} — pending
-          </p>
-        </div>
-
         <Pending
-          className="mb-10"
+          className="mb-8"
           item="Privacy Policy and Terms of Service copy"
           due="18 Sep"
           note="Held out of the footer as real links until the text exists. Linking to empty legal pages is worse than not linking."
         />
+
+        <div className="border-rule flex flex-col gap-4 border-t py-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-ink-faint text-sm">
+            © {year} {site.name}. All rights reserved.
+          </p>
+          {/* An outstanding-content note, so it belongs to preview builds for the
+              same reason <Pending> does — on the live site it reads as an
+              unfinished footer rather than as the checklist it is. */}
+          {pendingVisible() && (
+            <p className="text-ink-faint text-sm">
+              {pendingFooterItems.map((i) => i.label).join(" · ")} — pending
+            </p>
+          )}
+        </div>
       </Container>
     </footer>
   );

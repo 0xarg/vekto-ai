@@ -38,17 +38,14 @@ export default function PricingPage() {
       <PageHeader
         eyebrow="Engagement"
         title="Three ways to work with us."
-        lede="Migration programmes differ more in who does the work than in what the work is. Pick the shape that matches your team."
+        lede="Migration programs differ more in who does the work than in what the work is. Pick the shape that matches your team."
         crumbs={[{ name: "Engagement models", path: "/pricing" }]}
       />
 
       <Section bordered={false}>
-        <div className="grid gap-px lg:grid-cols-3">
+        <div className="lattice lg:grid-cols-3">
           {models.map((m) => (
-            <div
-              key={m.name}
-              className="border-rule bg-surface flex flex-col border p-8"
-            >
+            <div key={m.name} className="flex flex-col p-8">
               <h2 className="font-serif text-xl">{m.name}</h2>
               <p className="text-ink-muted mt-4 flex-1 text-sm leading-relaxed">
                 {m.body}

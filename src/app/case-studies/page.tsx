@@ -25,7 +25,7 @@ export default function CaseStudiesPage() {
         <Pending
           item="At least one customer migration story, with real numbers"
           due="10 Sep"
-          note="Anonymised is fine — 'a global life-sciences manufacturer' works well. This page cannot launch empty; it is the page enterprise buyers open first. Also need written sign-off for any customer logo or quote."
+          note="Anonymized is fine — 'a global life-sciences manufacturer' works well. This page cannot launch empty; it is the page enterprise buyers open first. Also need written sign-off for any customer logo or quote."
         />
       </Section>
 

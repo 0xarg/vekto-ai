@@ -99,7 +99,7 @@ export const primaryNav: NavGroup[] = [
       {
         label: "Solutions",
         href: "/solutions",
-        description: "Modernisation programmes by shape of problem.",
+        description: "Modernization programs by shape of problem.",
       },
       {
         label: "Use cases",

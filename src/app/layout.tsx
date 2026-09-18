@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
+import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
 import { site } from "@/lib/site";
@@ -14,9 +14,14 @@ const inter = Inter({
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
+/**
+ * Display serif. Chosen over a default-stack serif because it carries a real
+ * optical-size axis — see `font-optical-sizing` in globals.css, which lets one
+ * weight cover everything from the 5rem hero to a 1.19rem subhead.
+ */
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-source-serif",
+  variable: "--font-newsreader",
   display: "swap",
   axes: ["opsz"],
 });
@@ -49,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${sourceSerif.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable}`}
     >
       <body className="flex min-h-screen flex-col">
         <JsonLd schema={[organizationSchema(), websiteSchema()]} />

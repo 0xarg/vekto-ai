@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/sections/page-header";
 import { Section } from "@/components/ui/section";
 import { CtaBand } from "@/components/sections/cta-band";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 export const metadata = buildMetadata({
   title: "The five agents",
@@ -42,10 +41,12 @@ export default function AgentsPage() {
                     {agent.description}
                   </p>
                 </div>
-                <ArrowRight
-                  className="text-ink-faint group-hover:text-accent hidden h-5 w-5 transition-colors md:block"
+                <span
                   aria-hidden
-                />
+                  className="text-ink-faint group-hover:text-accent hidden font-mono text-lg transition-colors md:block"
+                >
+                  &rarr;
+                </span>
               </Link>
             </li>
           ))}

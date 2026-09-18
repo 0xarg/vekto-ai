@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Lists every <Pending> marker in the app — the content the client (or we)
+ * Lists every <Pending> and <PendingSection> marker in the app — the content
+ * the client (or we)
  * still owe — sorted by due date, with overdue items flagged.
  *
  * The markers are the source of truth. They render on preview deploys and
@@ -12,7 +13,20 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -35,7 +49,7 @@ function prop(block, name) {
 const items = [];
 for (const file of walk(join(ROOT, "src"))) {
   const source = readFileSync(file, "utf8");
-  for (const match of source.matchAll(/<Pending\b[\s\S]*?\/>/g)) {
+  for (const match of source.matchAll(/<Pending(?:Section)?\b[\s\S]*?\/>/g)) {
     const block = match[0];
     const item = prop(block, "item");
     if (!item) continue;
@@ -43,7 +57,10 @@ for (const file of walk(join(ROOT, "src"))) {
       item,
       owner: prop(block, "owner") ?? "Vekto",
       due: prop(block, "due"),
-      where: relative(ROOT, file).replace(/^src\/app\//, "/").replace(/\/page\.tsx$/, "") || "/",
+      where:
+        relative(ROOT, file)
+          .replace(/^src\/app\//, "/")
+          .replace(/\/page\.tsx$/, "") || "/",
     });
   }
 }
@@ -52,7 +69,9 @@ const parseDue = (due) => {
   if (!due) return Number.POSITIVE_INFINITY;
   const [day, mon] = due.split(" ");
   const m = MONTHS.indexOf(mon);
-  return m < 0 ? Number.POSITIVE_INFINITY : new Date(2026, m, Number(day)).getTime();
+  return m < 0
+    ? Number.POSITIVE_INFINITY
+    : new Date(2026, m, Number(day)).getTime();
 };
 
 items.sort((a, b) => parseDue(a.due) - parseDue(b.due));
@@ -88,5 +107,7 @@ for (const it of items) {
 }
 
 if (overdue > 0) {
-  console.log(red(bold(`${overdue} of ${items.length} are past their due date.\n`)));
+  console.log(
+    red(bold(`${overdue} of ${items.length} are past their due date.\n`)),
+  );
 }

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { staticRoutes } from "@/lib/site";
 import { publishedMigrations } from "@/content/migrations";
 import { agents } from "@/content/agents";
+import { getPublished } from "@/lib/content/loader";
 import { absoluteUrl } from "@/lib/utils";
 
 /** Priority weighting by route depth and commercial intent. */
@@ -40,5 +41,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...statics, ...migrationPages, ...agentPages];
+  // MDX collections. Only published entries are advertised; drafts are
+  // already stripped from production, and getPublished filters them in dev too.
+  const collectionPages = (
+    ["case-studies", "resources", "use-cases", "solutions"] as const
+  ).flatMap((collection) =>
+    getPublished(collection).map((entry) => ({
+      url: absoluteUrl(`/${collection}/${entry.slug}`),
+      lastModified: entry.frontmatter.updatedAt
+        ? new Date(entry.frontmatter.updatedAt)
+        : new Date(entry.frontmatter.publishedAt),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+  );
+
+  return [...statics, ...migrationPages, ...agentPages, ...collectionPages];
 }

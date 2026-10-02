@@ -1,7 +1,12 @@
+import Link from "next/link";
+
+import { getCollection } from "@/lib/content/loader";
+import { getPlatform } from "@/content/platforms";
 import { buildMetadata } from "@/lib/seo";
 import { PageHeader } from "@/components/sections/page-header";
 import { Section } from "@/components/ui/section";
 import { Pending } from "@/components/ui/pending";
+import { Label } from "@/components/ui/label";
 import { CtaBand } from "@/components/sections/cta-band";
 
 export const metadata = buildMetadata({
@@ -12,6 +17,8 @@ export const metadata = buildMetadata({
 });
 
 export default function UseCasesPage() {
+  const useCases = getCollection("use-cases");
+
   return (
     <>
       <PageHeader
@@ -22,11 +29,56 @@ export default function UseCasesPage() {
       />
 
       <Section bordered={false}>
-        <Pending
-          item="Use case list, with the trigger and the outcome for each"
-          due="10 Sep"
-          note="Best source is your own pipeline: what did the last ten prospects say when they explained why they were looking? Each becomes /use-cases/[slug]."
-        />
+        {useCases.length === 0 ? (
+          <Pending
+            item="Use case list, with the trigger and the outcome for each"
+            due="10 Sep"
+            note="Best source is your own pipeline: what did the last ten prospects say when they explained why they were looking? Each becomes /use-cases/[slug]."
+          />
+        ) : (
+          <>
+            <div className="lattice lg:grid-cols-2">
+              {useCases.map(({ slug, frontmatter: fm }) => (
+                <Link
+                  key={slug}
+                  href={`/use-cases/${slug}`}
+                  className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
+                >
+                  {fm.sourcePlatform && (
+                    <span className="text-legacy bg-legacy-soft border-legacy-line mb-4 self-start rounded-sm border px-2.5 py-1 font-mono text-xs">
+                      {getPlatform(fm.sourcePlatform).shortName}
+                    </span>
+                  )}
+
+                  <h2 className="group-hover:text-accent font-serif text-xl transition-colors">
+                    {fm.title}
+                  </h2>
+                  <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">
+                    {fm.description}
+                  </p>
+
+                  {/* The trigger is the buyer's own words for why they started
+                      looking. It is what they recognize themselves in. */}
+                  <div className="border-rule mt-5 border-t pt-4">
+                    <Label className="mb-2">The trigger</Label>
+                    <p className="text-ink-muted text-sm leading-relaxed">
+                      {fm.trigger}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {useCases.some((u) => u.frontmatter.status === "draft") && (
+              <Pending
+                className="mt-10"
+                item="Confirm the unpublished use cases in content/use-cases/"
+                due="10 Sep"
+                note="Drafts render here but are excluded from production builds and the sitemap until status is set to published."
+              />
+            )}
+          </>
+        )}
       </Section>
 
       <CtaBand />

@@ -1,0 +1,83 @@
+---
+title: "Migrating 130+ integrations from TIBCO to Azure without stopping the freight network they run on"
+description: "A global freight and logistics operator moved 134 TIBCO BusinessWorks integration flows onto Azure Logic Apps in 3.5 months, with BW5 end of support as the forcing event and carrier SLAs that ruled out downtime at cutover."
+publishedAt: "2026-09-24"
+status: "published"
+customer: "A global freight and logistics operator"
+industry: "Logistics and freight"
+sourcePlatform: "tibco"
+targetPlatform: "azure-logic-apps"
+estateSize: "134 integration flows"
+duration: "3.5 months, assessment to go-live"
+relatedMigrations: ["tibco-to-azure-logic-apps"]
+results:
+  - label: "Integration flows migrated"
+    value: "134"
+    source: "Estate inventory measured during the pre-contract assessment."
+  - label: "Elapsed time, assessment to go-live"
+    value: "3.5 mo"
+    source: "Engagement record, against a 14-month manual-migration estimate."
+  - label: "Below the manual-migration quote"
+    value: "62%"
+    source: "Delivered cost against the customer's systems-integrator quote of approximately $1.6M."
+  - label: "P1 incidents, first 90 days live"
+    value: "Zero"
+    source: "Customer incident records for the 90 days following cutover."
+  - label: "Flows flagged for manual review"
+    value: "11 of 134"
+    source: "Gap report issued after full conversion. No flow was silently converted."
+  - label: "Legacy TIBCO licenses decommissioned"
+    value: "Same quarter"
+    source: "Customer license position, same quarter as go-live."
+quote:
+  text: "We'd already been burned once by a migration that kept finding new scope six months in. What we needed was a number we could actually hold someone to, and a way to prove, line by line, that the routing logic our carriers depend on hadn't quietly changed."
+  attribution: "VP of Integration Architecture (customer name withheld by agreement)"
+  permissionOnFile: true
+---
+
+## The challenge
+
+A global freight and logistics operator ran its partner-facing order, booking
+and shipment-tracking integrations on TIBCO BusinessWorks — 134 flows
+connecting carriers, customs brokers and warehouse systems across four regions.
+
+With BW5 approaching end of support and license costs rising, the company
+needed to move to Azure Logic Apps to stay inside its existing Microsoft
+agreement. Two manual-migration quotes from systems integrators came back at 14
+months and roughly $1.6M. That was a timeline the business could not accept,
+given contractual SLAs with carrier partners that could not tolerate downtime
+during cutover.
+
+## Why VektoForge
+
+The team had already lived through one stalled modernization attempt on a
+smaller estate, and was wary of another open-ended rebuild.
+
+VektoForge's fixed-scope model — a measured assessment before any commitment,
+followed by a complete, tested project — matched what the business actually
+needed: a known cost, a known timeline, and confidence that fifteen years of
+accumulated shipment-routing logic would not be silently reinterpreted in the
+process.
+
+## What happened
+
+The engagement opened with a free assessment. VektoForge measured the full
+134-flow estate and converted a sample set of the customer's own workflows as
+proof, before any contract was signed.
+
+Full conversion followed, producing deployable Logic Apps projects,
+transformation logic and generated tests for every flow. The resulting gap
+report flagged 11 of 134 flows for manual review — primarily custom
+error-handling patterns, and two integrations with undocumented
+carrier-specific business rules.
+
+The customer's own integration team closed those gaps over five weeks, while
+VektoForge's delivery layer ran parallel validation against the legacy system's
+output, flow by flow, before cutover.
+
+## Why it worked
+
+1. **Fixed scope from a measured assessment**, not an estimate.
+2. **Sample conversion proved accuracy** before commitment.
+3. **Deterministic output made carrier-logic review tractable** — the 11 flagged
+   flows were reviewable by the customer's own team rather than opaque.

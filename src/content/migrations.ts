@@ -37,53 +37,9 @@ export type Migration = MigrationInput & {
 const raw: MigrationInput[] = [
   {
     source: "tibco",
-    target: "mulesoft",
-    // Named explicitly in the signed scope document.
-    status: "published",
-    headline: "Migrating TIBCO BusinessWorks to MuleSoft Anypoint",
-    summary:
-      "How VektoForge reads an existing TIBCO BusinessWorks estate, maps its processes and transformations onto MuleSoft Anypoint, and what remains a human decision.",
-    sourceArtifacts: [
-      "BusinessWorks processes and sub-processes",
-      "XPath and XSLT transformations",
-      "JMS, HTTP and JDBC activities",
-      "Shared resources and connection profiles",
-      "EMS destinations and queues",
-    ],
-  },
-  {
-    source: "webmethods",
-    target: "mulesoft",
-    status: "draft",
-    headline: "Migrating Software AG webMethods to MuleSoft Anypoint",
-    summary:
-      "How VektoForge reads a webMethods Integration Server estate, maps flow services and document types onto MuleSoft Anypoint, and what remains a human decision.",
-    sourceArtifacts: [
-      "Flow services and Java services",
-      "Document types and IS schemas",
-      "Broker and Universal Messaging destinations",
-      "Adapters and connection aliases",
-    ],
-  },
-  {
-    source: "oracle-soa",
-    target: "mulesoft",
-    status: "draft",
-    headline: "Migrating Oracle SOA Suite to MuleSoft Anypoint",
-    summary:
-      "How VektoForge reads an Oracle SOA Suite estate, maps BPEL processes and mediator routing onto MuleSoft Anypoint, and what remains a human decision.",
-    sourceArtifacts: [
-      "BPEL processes",
-      "Mediator routing rules",
-      "XSLT and XQuery transformations",
-      "Adapter configurations",
-      "Business rules",
-    ],
-  },
-  {
-    source: "tibco",
     target: "azure-logic-apps",
-    status: "draft",
+    // Confirmed by the customer case study the client supplied for this path.
+    status: "published",
     headline: "Migrating TIBCO BusinessWorks to Azure Logic Apps",
     summary:
       "How VektoForge reads an existing TIBCO BusinessWorks estate, maps its processes onto Azure Logic Apps and Azure Integration Services, and what remains a human decision.",
@@ -92,20 +48,6 @@ const raw: MigrationInput[] = [
       "XPath and XSLT transformations",
       "JMS and HTTP activities",
       "EMS destinations and queues",
-    ],
-  },
-  {
-    source: "ibm-ace",
-    target: "mulesoft",
-    status: "draft",
-    headline: "Migrating IBM App Connect Enterprise to MuleSoft Anypoint",
-    summary:
-      "How VektoForge reads an IBM ACE and Integration Bus estate, maps message flows and ESQL onto MuleSoft Anypoint, and what remains a human decision.",
-    sourceArtifacts: [
-      "Message flows and subflows",
-      "ESQL compute nodes",
-      "Message sets and DFDL models",
-      "MQ queues and channels",
     ],
   },
   {

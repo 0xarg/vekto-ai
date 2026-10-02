@@ -48,13 +48,6 @@ const raw: Platform[] = [
 
   // ---- Modern / target platforms -----------------------------------------
   {
-    id: "mulesoft",
-    name: "MuleSoft Anypoint Platform",
-    shortName: "MuleSoft",
-    vendor: "Salesforce",
-    role: "target",
-  },
-  {
     id: "azure-logic-apps",
     name: "Azure Logic Apps",
     shortName: "Logic Apps",

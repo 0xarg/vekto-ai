@@ -80,7 +80,14 @@ Pairs carry `status: "published" | "draft"`. Drafts render locally with an
 UNCONFIRMED badge, are `noindex`, are excluded from the sitemap, and are
 stripped from production builds entirely. **A pair only becomes `published`
 when the client has confirmed Vekto actually supports it.** Only
-`tibco-to-mulesoft` is published today — it is the one pair named in the scope.
+`tibco-to-azure-logic-apps` is published today, confirmed by the customer case
+study the client supplied for that path.
+
+The scope document names `tibco-to-mulesoft`, but on 24 Sep 2026 the client
+corrected this in writing: MuleSoft Anypoint is not one of their targets, they
+run Azure Integration Services. MuleSoft was removed from the platform registry
+along with its four pairs. Do not reintroduce it without a written reversal —
+this contradicts the signed scope and the correction is the later record.
 
 ## Next.js 16, not 15
 

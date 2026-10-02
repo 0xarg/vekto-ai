@@ -5,7 +5,7 @@ import { absoluteUrl } from "./utils";
 type BuildMetadataArgs = {
   title: string;
   description: string;
-  /** Site-relative path, e.g. "/migrations/tibco-to-mulesoft". */
+  /** Site-relative path, e.g. "/migrations/tibco-to-azure-logic-apps". */
   path: string;
   /** Omit for evergreen pages; set for articles and case studies. */
   publishedTime?: string;

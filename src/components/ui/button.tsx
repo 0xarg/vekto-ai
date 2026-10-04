@@ -3,80 +3,53 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * `tone="inverse"` is required on `--inverse` surfaces, not cosmetic: the accent
- * measures 2.15:1 against the dark band, so a navy fill there is below the 3:1
- * WCAG 1.4.11 floor for a control's own boundary — the button stops reading as
- * a shape at all. On dark the primary inverts to a light fill (17.22:1), which
- * is both legible and the stronger hierarchy.
+ * There is no `tone` prop. Every color here resolves through a token that the
+ * `[data-tone="inverse"]` block in globals.css reassigns, so a button inside a
+ * dark band re-themes itself and the caller never has to know which surface it
+ * landed on. That prop used to be mandatory on dark bands and silently wrong
+ * when forgotten, which is the failure this removes.
+ *
+ * `primary` is Anthropic's clay, flat, carrying near-black text.
+ *
+ * The dark text is not a stylistic choice. Clay measures 3.28:1 under white and
+ * fails AA; under `--accent-ink` it measures 5.08:1. White-on-color is what
+ * every other site in this category ships and it would have been wrong here on
+ * the numbers alone — this is the rare case where the accessible answer is also
+ * the more distinctive one.
+ *
+ * `secondary` stays a flat bordered surface, which is what keeps the clay
+ * meaning "this is the one action on the band".
  */
 const button = cva(
-  "inline-flex items-center justify-center gap-2 rounded-sm font-medium whitespace-nowrap transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        primary: "border",
-        secondary: "border",
-        ghost: "border border-transparent",
-        link: "underline-offset-4 hover:underline",
+        primary:
+          "bg-accent-fill text-accent-ink border-accent-fill hover:bg-accent-fill-hover hover:border-accent-fill-hover border shadow-card",
+        secondary:
+          "bg-surface text-ink border-rule-strong hover:border-ink hover:bg-surface-2 border shadow-card",
+        ghost:
+          "text-ink hover:bg-surface-2 hover:border-rule border border-transparent",
+        link: "text-accent underline-offset-4 hover:underline",
       },
       size: {
         sm: "h-9 px-3.5 text-sm",
         md: "h-11 px-5 text-[0.9375rem]",
         lg: "h-12 px-6 text-base",
       },
-      tone: {
-        default: "",
-        inverse: "",
-      },
     },
     compoundVariants: [
-      /* ---- on light surfaces ------------------------------------------- */
-      {
-        variant: "primary",
-        tone: "default",
-        class:
-          "bg-accent text-accent-ink border-accent hover:bg-accent-hover hover:border-accent-hover",
-      },
-      {
-        variant: "secondary",
-        tone: "default",
-        class:
-          "bg-surface text-ink border-rule-strong hover:border-ink hover:bg-surface-2",
-      },
-      {
-        variant: "ghost",
-        tone: "default",
-        class: "text-ink hover:bg-surface-2 hover:border-rule",
-      },
-      { variant: "link", tone: "default", class: "text-accent" },
-
-      /* ---- on --inverse ------------------------------------------------- */
-      {
-        variant: "primary",
-        tone: "inverse",
-        class:
-          "bg-ground text-inverse border-ground hover:bg-white hover:border-white",
-      },
-      {
-        variant: "secondary",
-        tone: "inverse",
-        class:
-          "text-ink-inverse border-ink-inverse-faint hover:border-ink-inverse hover:bg-white/5 bg-transparent",
-      },
-      {
-        variant: "ghost",
-        tone: "inverse",
-        class: "text-ink-inverse-muted hover:text-ink-inverse hover:bg-white/5",
-      },
-      { variant: "link", tone: "inverse", class: "text-accent-on-dark" },
-
       /* `link` is text, not a control: it takes no button box. This has to sit
          in compoundVariants so it resolves after the `size` classes — as a
          plain variant its `h-auto` lost to `h-9`/`h-11`/`h-12` and the link
          silently rendered at button height. */
-      { variant: "link", class: "h-auto p-0" },
+      {
+        variant: "link",
+        class: "h-auto rounded-sm p-0 shadow-none active:scale-100",
+      },
     ],
-    defaultVariants: { variant: "primary", size: "md", tone: "default" },
+    defaultVariants: { variant: "primary", size: "md" },
   },
 );
 
@@ -89,12 +62,11 @@ export function ButtonLink({
   href,
   variant,
   size,
-  tone,
   className,
   children,
 }: ButtonProps & { href: string }) {
   const external = href.startsWith("http");
-  const classes = cn(button({ variant, size, tone }), className);
+  const classes = cn(button({ variant, size }), className);
 
   if (external) {
     return (
@@ -118,16 +90,12 @@ export function ButtonLink({
 export function Button({
   variant,
   size,
-  tone,
   className,
   children,
   ...props
 }: ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      className={cn(button({ variant, size, tone }), className)}
-      {...props}
-    >
+    <button className={cn(button({ variant, size }), className)} {...props}>
       {children}
     </button>
   );

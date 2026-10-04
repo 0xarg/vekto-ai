@@ -107,7 +107,7 @@ export default async function CaseStudyPage({ params }: Params) {
               <dt className="text-label text-ink-faint font-mono uppercase">
                 {r.label}
               </dt>
-              <dd className="text-ink mt-3 font-serif text-3xl tabular-nums">
+              <dd className="text-ink mt-3 text-3xl font-semibold tracking-tight tabular-nums">
                 {r.value}
               </dd>
               {/* Every figure carries its source. The scope forbids
@@ -129,7 +129,7 @@ export default async function CaseStudyPage({ params }: Params) {
       {fm.quote && (
         <Section bordered tone="surface">
           <blockquote className="max-w-3xl">
-            <p className="text-lead text-ink font-serif">
+            <p className="text-lead text-ink font-semibold tracking-tight">
               &ldquo;{fm.quote.text}&rdquo;
             </p>
             <footer className="text-ink-muted mt-5 text-sm">

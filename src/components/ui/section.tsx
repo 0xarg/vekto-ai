@@ -8,14 +8,19 @@ const bandPadding = {
   loose: "py-band-loose",
 } as const;
 
+/**
+ * `inverse` carries no classes of its own. The `[data-tone="inverse"]` block in
+ * globals.css paints the band and reassigns every token underneath it, so the
+ * heading, lede, buttons and any `.lattice` inside re-theme without being told.
+ */
 const bandTone = {
   ground: "",
   surface: "bg-surface-2",
-  /** Tinted toward the target pole — 6% accent over the ground. */
+  /** Tinted toward the target pole. */
   accent: "bg-accent-wash",
   /** Tinted toward the legacy/source pole. */
   legacy: "bg-legacy-wash",
-  inverse: "bg-inverse text-ink-inverse",
+  inverse: "",
 } as const;
 
 export function Section({
@@ -39,11 +44,11 @@ export function Section({
   /**
    * Hairline top border, on by default.
    *
-   * An earlier version made this conditional on the adjacent band's tone, on
-   * the theory that a tonal change already separated them. It does not: the
-   * ground and surface steps measure 1.073:1 apart, and the tinted washes are
-   * no better, so bands ran together with nothing between them. On this palette
-   * the rule is the separator and the tones are variety.
+   * Within a run of light bands the rule is still the separator: the ground and
+   * surface steps measure 1.073:1 apart and cannot separate anything by
+   * themselves. Across a light-to-dark change it is redundant — those bands sit
+   * ~18.6:1 apart — so pass `bordered={false}` where a dark band meets a light
+   * one, and where two dark bands are meant to read as a single field.
    */
   bordered?: boolean;
   /**
@@ -54,8 +59,6 @@ export function Section({
   tone?: "ground" | "surface" | "accent" | "legacy" | "inverse";
   id?: string;
 }) {
-  const inverse = tone === "inverse";
-
   return (
     <section
       id={id}
@@ -64,8 +67,7 @@ export function Section({
       className={cn(
         bandPadding[density],
         bandTone[tone],
-        bordered && "border-t",
-        bordered && (inverse ? "border-rule-inverse" : "border-rule"),
+        bordered && "border-rule border-t",
         className,
       )}
     >
@@ -77,26 +79,9 @@ export function Section({
               density === "tight" ? "mb-8" : "mb-10 sm:mb-14",
             )}
           >
-            {eyebrow && (
-              <Label className="mb-4" tone={inverse ? "inverse" : "default"}>
-                {eyebrow}
-              </Label>
-            )}
-            {heading && (
-              <h2 className={cn("text-h2", inverse && "text-ink-inverse")}>
-                {heading}
-              </h2>
-            )}
-            {lede && (
-              <p
-                className={cn(
-                  "text-lead mt-5",
-                  inverse ? "text-ink-inverse-muted" : "text-ink-muted",
-                )}
-              >
-                {lede}
-              </p>
-            )}
+            {eyebrow && <Label className="mb-4">{eyebrow}</Label>}
+            {heading && <h2 className="text-h2">{heading}</h2>}
+            {lede && <p className="text-lead text-ink-muted mt-5">{lede}</p>}
           </div>
         )}
         {children}

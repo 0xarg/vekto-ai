@@ -45,7 +45,7 @@ export default function SolutionsPage() {
                   href={`/solutions/${slug}`}
                   className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
                 >
-                  <h2 className="group-hover:text-accent font-serif text-xl transition-colors">
+                  <h2 className="group-hover:text-accent text-xl font-semibold tracking-tight transition-colors">
                     {fm.title}
                   </h2>
                   <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">

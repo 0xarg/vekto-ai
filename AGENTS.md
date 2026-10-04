@@ -26,6 +26,7 @@ pnpm lint         # eslint
 pnpm typecheck    # tsc --noEmit
 pnpm format       # prettier
 pnpm pending      # list content the client still owes, by due date
+pnpm contrast     # re-derive every contrast ratio in the token set
 ```
 
 ## Non-negotiables
@@ -46,11 +47,17 @@ These exist because the previous site broke each one. Do not reintroduce them.
    The old site had one unchanging `<title>` across all routes.
 5. **Never hardcode a color.** Everything resolves through the tokens in
    `src/app/globals.css`.
-6. **Every visual element resolves from a real value.** A numeral or graphic
-   mark may only appear if it comes from `src/content/*` via `src/lib/derived.ts`
-   — counts, positions, inventories, source/target polarity. Nothing on the page
-   is ornament. The previous hero drew a 4rem hairline grid that encoded nothing;
-   it is gone. If a figure cannot be sourced it is a `<Pending>`, not a stat.
+6. **Every numeral and every factual mark resolves from a real value.** Counts,
+   positions, inventories and source/target polarity come from `src/content/*`
+   via `src/lib/derived.ts`. If a figure cannot be sourced it is a `<Pending>`,
+   not a stat.
+
+   **Decorative surface is permitted and expected** — gradients, tints, icon
+   chips, graphic zones, bento cells. The rule is that nothing may _assert_
+   something untrue, not that nothing may be attractive. This is an amendment:
+   the rule previously read "nothing on the page is ornament," and four rounds
+   of client review rejected what that produced. The protective half stays, the
+   aesthetic half is gone.
 
 ## Commits
 
@@ -124,27 +131,204 @@ Page section plans live in the SEO blueprint artifact, not here.
 
 ## Design system
 
-- `src/lib/derived.ts` — counts and positions computed from the registries. The
-  only sanctioned source for a numeral rendered as design.
-- `Readout` in `src/components/ui/label.tsx` — a value with the thing it
-  measures. `Label` is a caption; a `Readout` _is_ data, so the value takes
-  `--ink` and the caption recedes.
-- `.lattice` in `globals.css` — a grid whose background shows through a 1px gap.
-  Use it instead of `gap-px` on bordered children, which doubles every interior
-  hairline to 2px and thickens the perimeter.
-- `Section density` — `tight | default | loose`, mapped to the `--spacing-band*`
-  tokens. A band's height states its editorial weight. Section separators are
-  decided by adjacency in CSS: a rule is drawn only between two consecutive
-  bands sharing a tone, since a tonal change already separates them.
-- `PendingSection` — for a band whose entire body is outstanding content. It
-  collapses in production including its heading, because an empty `<h2>` reads
-  as thin content to a crawler and as an unfinished page to a buyer.
-- `tone="inverse"` on `Button` is required on `--inverse` surfaces. The accent
-  measures 2.15:1 there, below the 3:1 floor for a control's own boundary.
+Light is the ground the page is written on. The near-black set is **punctuation**
+— it appears in exactly three places: the code specimen's interior, the pull
+quote, and the closing CTA panel.
 
-Content is much thinner in production than in preview: `<Pending>` and draft
-migration pairs are both stripped, so preview shows six pairs and production
-one. Check both — `pnpm build && pnpm start` exercises the production path.
+### Brand
+
+**Anthropic's clay.** The palette is theirs: clay `#CC785C`, ivory `#FAF9F5`,
+cream `#F0EEE6`, slate `#141413`, with dusty blue and sage as secondaries.
+
+- **Clay carries dark text, never white.** Clay measures 3.28:1 under white and
+  fails AA; under `--accent-ink` it is 5.08:1. White-on-color is what every
+  other site in this category ships and would have been wrong here on the
+  numbers alone. This is the rare case where the accessible answer is also the
+  more distinctive one — do not "fix" the button to white text.
+- **Two accent tokens, two jobs.** `--accent` is the deep step for text and
+  marks; `--accent-fill` is the clay itself, for fills only. Clay as text on
+  ivory is 3.11:1 and fails.
+- There is **no gradient**. An earlier pass used a teal-to-blue sweep on the
+  primary; clay is used flat, the way Anthropic uses it. The only survivor is a
+  hairline of warm light on the CTA panel's top edge.
+
+### The two semantic poles
+
+`--accent` is the target pole, `--legacy` the source pole, and the site encodes
+direction of travel by color everywhere a migration is depicted.
+
+- **The source pole is a cool stone grey, and the coolness is load-bearing.**
+  Clay took the warm end of the palette and the body and caption inks are warm
+  greys, so an achromatic or warm source pole reads as muted text rather than as
+  a pole. It is luminance-matched to `--accent` (5.25 against 5.47) and
+  separated by hue instead.
+- The poles are **no longer symmetric in presence**, and that is deliberate: the
+  target pole is chromatic and leads because it is the brand; the source pole is
+  near-neutral and recedes. `pnpm contrast` still checks the luminance gap, but
+  the tolerance is wider and a comment there explains why the check means less
+  than it used to.
+- The ten places the two poles sit adjacent and must stay legible side by side —
+  the code panel's two headers, the platform strip, `PlatformPole`, the pipeline
+  ticks, the coverage matrix, the case-study and use-case chips, the
+  `StageList` columns, and the MDX `<Summary>`/`<Limits>` blocks — are a visual
+  check, not a measurable one.
+
+### Tokens
+
+- **Theme scoping is CSS, not props.** `[data-tone="inverse"]` reassigns the raw
+  tokens for a whole subtree and `@theme inline` resolves each `var()` at the use
+  site, so every utility underneath re-themes itself. There is no `tone` prop on
+  `Button`, `Label` or `Readout`, and nothing should reintroduce one.
+- **A token may reference another rather than repeat its hex.** `--focus` is
+  `var(--accent)`; the syntax classes point at the two poles. This is not
+  cosmetic: those three were duplicated hexes once and silently survived a
+  re-theme, keeping the old color while everything around them changed.
+  `scripts/contrast.mjs` resolves the indirection so the report measures real
+  values.
+- **`pnpm contrast`** re-derives every pair and reads **only the `:root` block** —
+  a flat scan measures light foregrounds against dark backgrounds, because the
+  scoping block reassigns light token names further down. For an ad-hoc pair use
+  `node scripts/contrast.mjs '#aaa' '#bbb'`; `pnpm` does not forward the args and
+  will silently print the full report instead.
+- **`--header-h` and `--header-gap`** are the single source for the nav island's
+  geometry. `scroll-padding-top` and the mobile sheet's offset both derive from
+  them. These were three independent values that had already drifted to 4rem
+  against 6rem.
+- **Radius** is four steps: 2px for controls and marks, 4px, then 12 and 16 for
+  cards and panels. **Elevation** is `--shadow-card` and `--shadow-panel` on
+  light, `--shadow-key` on dark, `--shadow-menu` for the dropdown.
+- `src/lib/derived.ts` — counts, positions and the platform lists. The only
+  sanctioned source for a numeral rendered as design.
+- `Readout` — a value with the thing it measures. `scale="display"` is only
+  correct when the band exists to state that value.
+- `Card` — `raised` for a free-standing card, `ruled` for a flat cell inside a
+  `.lattice` where the grid draws the hairlines.
+- `.lattice` — a grid whose background shows through a 1px gap, instead of
+  `gap-px` on bordered children which doubles every interior hairline.
+- `PendingSection` — collapses in production including its heading, because an
+  empty `<h2>` reads as thin content to a crawler.
+
+### Typography
+
+**No webfonts.** The stack is Apple's own — SF Pro Display for headings, SF Pro
+Text for body, SF Mono for code — reached through the system font stack in
+`globals.css`, because those faces are not licensed for webfont use.
+
+- Headings are **weight 600 with tight tracking**, Apple's marketing setting.
+  The previous serif ran at one weight because its optical-size axis carried the
+  range; SF has no such axis, so weight does that work.
+- `font-serif` resolves to New York on Apple hardware but **is not used
+  anywhere** — the whole site is one sans voice. Do not reintroduce it piecemeal.
+- The site downloads **zero font files**. On Windows this falls back to Segoe UI
+  and on Android to Roboto, both more generic than SF. That tradeoff is inherent
+  to the brief and was accepted knowingly.
+- Three previous stacks were tried and rejected by the client: Newsreader+Inter,
+  then Fraunces+Instrument Sans. **Inter in particular reads as a default rather
+  than a decision** and should not come back.
+
+### The decorative tints
+
+Five hues — clay, dusty blue, sage, amber, violet — all from Anthropic's palette,
+in `:root` as `--tint-*`. Each has three steps because a base tint cannot carry
+text; the lightest measures 2.07:1 on the ground.
+
+- `--tint-<hue>` is a fill or gradient stop, `--tint-<hue>-ink` is the step that
+  can carry text or an icon, `--tint-<hue>-wash` is a cell background.
+- **They are decorative and carry no meaning.** Only `--accent` (target) and
+  `--legacy` (source) state anything. If a tint starts standing for a concept,
+  the migration diagrams stop being readable.
+- `Card` takes `tint`, `icon`, `graphic` and `washed`. The tint sets `--chip-wash`
+  and `--chip-ink` on the element, so `.chip` and any child can read them
+  without a class map.
+- `pnpm contrast` checks each hue four ways; **ink on its own wash** is the pair
+  that breaks first if a wash is pushed for more colour.
+
+### Gradients
+
+`.mesh-warm`, `.mesh-cool` and `.mesh-cta` in `globals.css` are multi-stop radial
+meshes used as a panel's whole background. They **never sit behind text that has
+to be read** — a gradient cannot be contrast-checked against a moving target, so
+copy goes on a flat surface and the gradient carries the area around it.
+
+### Navbar
+
+A floating pill island, detached from the top edge so the page scrolls visibly
+underneath it. One passive scroll listener drives one boolean, which tightens the
+island past 16px — deliberately not a scroll-linked animation, which would run
+work every frame to save a 300ms transition.
+
+Note when testing: **programmatic `window.scrollTo` does not dispatch a scroll
+event** in the browser-automation context, so the island will appear not to
+react. Scroll with a real wheel event to verify it.
+
+### The code specimen
+
+`src/components/sections/code-transform.tsx` is the homepage's principal graphic:
+a real BusinessWorks process and the Logic Apps workflow generated from it.
+
+- It resolves from `migration.specimen` in `src/content/migrations.ts`, like
+  every other graphic on the site. A pair without a specimen renders nothing.
+- **Both fragments must be accurate to the platform** — trimmed from real
+  output, never invented. This is the one element an integration architect will
+  read line by line looking for a reason to disbelieve the rest of the page.
+- Highlighting is `src/lib/syntax.ts`, hand-rolled for XML and JSON. A
+  third-party highlighter ships its own theme, and a theme is a list of
+  hardcoded hex values, which non-negotiable #5 forbids. Owning it means every
+  token class resolves to a `--d-syntax-*` token and `pnpm contrast` can measure
+  it.
+- The four syntax colors are the only colors on the site outside the two
+  semantic poles, and each states what a token _is_.
+
+### Motion
+
+CSS only; there is no animation library and none should be added.
+
+- **Nothing gates content on scroll.** No `whileInView`, no IntersectionObserver
+  reveals. This is non-negotiable #2 and it is why the previous site shipped an
+  invisible mobile headline. Every reference site the client has offered —
+  zenflow, auraform, aiwork, agentik — has the same defect.
+- Entrance animation is for **marks only** — hairlines, ticks, the scan line —
+  never text, and runs on load rather than on intersection.
+- Marks animate on `transform` or `opacity` of a _tint behind_ text that is
+  already painted. Nothing that carries meaning starts at `opacity: 0`.
+- Two looping animations exist: the bus pulse and the specimen's scan line. Both
+  are switched off outright under `prefers-reduced-motion` rather than left to
+  the global guard, because an infinite animation forced to a single 0.01ms
+  iteration parks at whatever frame it lands on.
+
+### What keeps this from reading as a generated template
+
+The client asked for "vibrant, futuristic" and named five reference sites, three
+of which are Framer templates. **The distinction that matters: what makes a
+template look generated is fabricated content, not the layout vocabulary.**
+Adopting Aiwork's section inventory and filling it from the registries is not the
+same move as shipping a template full of lorem and stock logos.
+
+So the layout vocabulary is now permitted — bento grids, 12–16px radii, soft
+shadows, gradient CTA fills, a figures band, an FAQ accordion, a pricing-shaped
+table. This is a deliberate reversal of an earlier version of this section, taken
+after the client reviewed and rejected the restrained direction twice.
+
+Still forbidden, and not negotiable:
+
+- Fabricated customers, logos or statistics (non-negotiable #1). The figures band
+  on the homepage is permitted _only_ because every value carries a `source`
+  string the schema requires.
+- Any H1 behind a scroll reveal (#2).
+- Invented product screenshots. The code specimen exists precisely so the hero
+  does not need one — a mocked dashboard asserts a UI that may not exist, which
+  is an unsourced claim in a different costume.
+- A logo wall of customers we do not have. `PlatformStrip` fills that slot with
+  platform names and states how much of the matrix is actually documented.
+- A decorative backdrop grid. Non-negotiable #6 names this exact element; the
+  hero uses `.hero-light`, a soft falloff that lights the panel, instead.
+- Violet or pink hero gradients, glassmorphism, glow orbs, sequential scroll
+  fade-ups, star ratings, stock avatars, sparkle motifs.
+
+Content is much thinner in production than in preview: `<Pending>`, draft
+migration pairs and draft MDX entries are all stripped, so preview shows two
+pairs and three solutions where production shows one and none. Check both —
+`pnpm build && pnpm start` exercises the production path.
 
 ## Not yet built
 

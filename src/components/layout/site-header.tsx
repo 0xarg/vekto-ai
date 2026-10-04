@@ -57,6 +57,17 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  // Whether the page has scrolled far enough for the island to tighten. One
+  // passive listener driving one boolean — deliberately not a scroll-linked
+  // animation, which would run work on every frame to save a 150ms transition.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function scheduleClose() {
     closeTimer.current = setTimeout(() => setOpenGroup(null), 120);
   }
@@ -68,16 +79,32 @@ export function SiteHeader() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <header className="bg-ground/85 border-rule sticky top-0 z-50 border-b backdrop-blur-md">
+    /* A floating island rather than a full-width bar. It is detached from the
+       top edge, so the page visibly scrolls underneath it, and it tightens once
+       you are past the hero. `--header-h` and `--header-gap` in globals.css are
+       the single source for its geometry — `scroll-padding-top` and the mobile
+       sheet's offset both derive from them, because those three used to be
+       written out independently and had already drifted apart. */
+    <header
+      className="sticky z-50 px-4 sm:px-6"
+      style={{ top: "var(--header-gap)" }}
+    >
       <a
         href="#main"
-        className="bg-accent text-accent-ink sr-only rounded-sm px-4 py-2 focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+        className="bg-accent-fill text-accent-ink sr-only rounded-full px-4 py-2 focus:not-sr-only focus:absolute focus:top-3 focus:left-6 focus:z-50"
       >
         Skip to content
       </a>
 
-      <Container width="wide">
-        <div className="flex h-16 items-center justify-between gap-6">
+      <div
+        className={cn(
+          "border-rule bg-surface/85 mx-auto flex max-w-6xl items-center justify-between gap-6 rounded-full border pr-2 pl-5 backdrop-blur-xl",
+          "transition-[box-shadow,max-width,height] duration-300 ease-out",
+          scrolled ? "shadow-panel max-w-5xl" : "shadow-card",
+        )}
+        style={{ height: "var(--header-h)" }}
+      >
+        <>
           <Link href="/" className="shrink-0" aria-label={`${site.name} home`}>
             <Wordmark />
           </Link>
@@ -102,10 +129,11 @@ export function SiteHeader() {
                     aria-haspopup="true"
                     onClick={() => setOpenGroup(open ? null : group.label)}
                     className={cn(
-                      "flex h-16 items-center gap-1.5 px-3 text-[0.9375rem] transition-colors",
+                      "flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.9375rem] transition-colors duration-150",
                       isActive(group.href)
                         ? "text-ink"
                         : "text-ink-muted hover:text-ink",
+                      open && "text-ink",
                     )}
                   >
                     {group.label}
@@ -120,7 +148,7 @@ export function SiteHeader() {
 
                   {open && (
                     <div
-                      className="border-rule bg-surface shadow-menu absolute top-full left-0 w-80 border"
+                      className="border-rule bg-surface shadow-menu animate-menu-in absolute top-full left-0 mt-2 w-80 overflow-hidden rounded-xl border"
                       onMouseEnter={cancelClose}
                       onMouseLeave={scheduleClose}
                     >
@@ -128,7 +156,7 @@ export function SiteHeader() {
                         <Link
                           key={item.href}
                           href={item.href}
-                          className="border-rule hover:bg-surface-2 group block border-b p-4 last:border-b-0"
+                          className="border-rule hover:bg-surface-2 group block border-b p-4 transition-colors duration-150 last:border-b-0"
                         >
                           <span className="text-ink group-hover:text-accent block text-[0.9375rem] font-medium transition-colors">
                             {item.label}
@@ -170,12 +198,17 @@ export function SiteHeader() {
               <Menu className="h-5 w-5" />
             )}
           </button>
-        </div>
-      </Container>
+        </>
+      </div>
 
       {/* ---------------- Mobile sheet ---------------- */}
       {mobileOpen && (
-        <div className="border-rule bg-ground fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t lg:hidden">
+        <div
+          className="border-rule bg-ground fixed inset-x-0 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
+          style={{
+            top: "calc(var(--header-h) + var(--header-gap) * 2)",
+          }}
+        >
           <Container>
             <nav className="py-6">
               {primaryNav.map((group) => (

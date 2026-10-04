@@ -1,36 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
+
+/**
+ * No webfonts. The type stack is Apple's own — SF Pro Display, SF Pro Text and
+ * SF Mono — reached through the system font stack in globals.css, because those
+ * faces are not licensed for webfont use. The site downloads no font files at
+ * all; see the `--font-*` block there for the fallback chain on other
+ * platforms.
+ */
 
 import { site } from "@/lib/site";
 import { organizationSchema, websiteSchema } from "@/lib/jsonld";
 import { JsonLd } from "@/components/ui/json-ld";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-/**
- * Display serif. Chosen over a default-stack serif because it carries a real
- * optical-size axis — see `font-optical-sizing` in globals.css, which lets one
- * weight cover everything from the 5rem hero to a 1.19rem subhead.
- */
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-newsreader",
-  display: "swap",
-  axes: ["opsz"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -52,10 +35,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable}`}
-    >
+    <html lang="en">
       <body className="flex min-h-screen flex-col">
         <JsonLd schema={[organizationSchema(), websiteSchema()]} />
         <SiteHeader />

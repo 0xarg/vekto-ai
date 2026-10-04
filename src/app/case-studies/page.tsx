@@ -60,7 +60,7 @@ export default function CaseStudiesPage() {
                       </span>
                     </div>
 
-                    <h2 className="group-hover:text-accent mt-5 font-serif text-xl transition-colors">
+                    <h2 className="group-hover:text-accent mt-5 text-xl font-semibold tracking-tight transition-colors">
                       {fm.title}
                     </h2>
                     <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">

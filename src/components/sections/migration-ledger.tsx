@@ -32,7 +32,7 @@ export function PlatformPole({
       </Label>
       <div
         className={cn(
-          "text-ink font-serif leading-snug",
+          "text-ink leading-snug font-semibold tracking-tight",
           compact ? "mt-1.5 text-sm" : "mt-2 text-lg",
         )}
       >

@@ -24,6 +24,27 @@ const migrationSchema = z.object({
   /** Concrete artifacts the migration has to deal with on the source side.
    *  Used to build the "what we handle" section. Factual inventory only. */
   sourceArtifacts: z.array(z.string()).min(1),
+  /**
+   * A worked before/after for this path: a representative fragment of the
+   * source platform's own format, and the target-platform output generated
+   * from it. The homepage renders this as its principal graphic.
+   *
+   * Optional, and deliberately so. A pair without one renders the diagram
+   * specimen instead — a wrong sample is worse than no sample, because this is
+   * the one element on the site an integration architect will read line by line
+   * looking for a reason to disbelieve it. Both fragments must be accurate to
+   * the platform, trimmed rather than invented, and reviewed before they land.
+   */
+  specimen: z
+    .object({
+      sourceLanguage: z.enum(["xml", "json"]),
+      targetLanguage: z.enum(["xml", "json"]),
+      source: z.string().min(40),
+      target: z.string().min(40),
+      /** Which `sourceArtifacts` entry this fragment demonstrates. */
+      demonstrates: z.string(),
+    })
+    .optional(),
 });
 
 export type MigrationInput = z.infer<typeof migrationSchema>;
@@ -49,6 +70,46 @@ const raw: MigrationInput[] = [
       "JMS and HTTP activities",
       "EMS destinations and queues",
     ],
+    specimen: {
+      demonstrates: "JMS and HTTP activities",
+      sourceLanguage: "xml",
+      targetLanguage: "json",
+      source: `<pd:ProcessDefinition name="OrderIntake">
+  <pd:startName>ReceiveOrder</pd:startName>
+  <pd:activity name="ReceiveOrder">
+    <pd:type>com.tibco.plugin.jms.JMSQueueEventSource</pd:type>
+    <config>
+      <destination>QUEUE.ORDER.INBOUND</destination>
+      <sessionAttributes acknowledgeMode="2" />
+    </config>
+  </pd:activity>
+  <pd:activity name="MapToCanonical">
+    <pd:type>com.tibco.plugin.mapper.MapperActivity</pd:type>
+    <config><stylesheet>order-to-canonical.xslt</stylesheet></config>
+  </pd:activity>
+  <pd:transition from="ReceiveOrder" to="MapToCanonical" />
+</pd:ProcessDefinition>`,
+      target: `{
+  "definition": {
+    "triggers": {
+      "When_a_message_is_received": {
+        "type": "ServiceBus",
+        "inputs": {
+          "queueName": "QUEUE.ORDER.INBOUND",
+          "autoComplete": false
+        }
+      }
+    },
+    "actions": {
+      "Map_to_canonical": {
+        "type": "Xslt",
+        "inputs": { "map": { "name": "order-to-canonical.xslt" } },
+        "runAfter": {}
+      }
+    }
+  }
+}`,
+    },
   },
   {
     source: "tibco",

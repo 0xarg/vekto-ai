@@ -16,10 +16,10 @@ import { platforms } from "@/content/platforms";
  * — the only quantitative claims the site can currently make honestly.
  */
 
-const sourcePlatforms = platforms.filter(
+export const sourcePlatforms = platforms.filter(
   (p) => p.role === "source" || p.role === "both",
 );
-const targetPlatforms = platforms.filter(
+export const targetPlatforms = platforms.filter(
   (p) => p.role === "target" || p.role === "both",
 );
 
@@ -65,3 +65,9 @@ export function adjacentAgents(step: number) {
     next: agents.find((a) => a.step === step + 1),
   };
 }
+
+/**
+ * Every source×target combination the registry can express. The denominator for
+ * how much of the matrix is actually documented — see `CoverageMatrix`.
+ */
+export const coverageCells = counts.sourcePlatforms * counts.targetPlatforms;

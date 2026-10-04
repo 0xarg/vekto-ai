@@ -21,7 +21,10 @@ const components = {
     <h2 className="text-h3 mt-14 mb-4 scroll-mt-24" {...props} />
   ),
   h3: (props: React.ComponentPropsWithoutRef<"h3">) => (
-    <h3 className="mt-10 mb-3 scroll-mt-24 font-serif text-xl" {...props} />
+    <h3
+      className="mt-10 mb-3 scroll-mt-24 text-xl font-semibold tracking-tight"
+      {...props}
+    />
   ),
   a: ({ href = "", ...props }: AnchorProps) => {
     const internal = href.startsWith("/");
@@ -74,7 +77,7 @@ export function Mdx({
   return (
     <div
       className={cn(
-        "prose prose-vekto prose-headings:font-serif prose-headings:font-normal max-w-none",
+        "prose prose-vekto prose-headings:font-semibold prose-headings:font-normal max-w-none tracking-tight",
         className,
       )}
     >

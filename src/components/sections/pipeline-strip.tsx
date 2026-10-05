@@ -107,7 +107,7 @@ export function PipelineStrip() {
                     />
                   </span>
                 </div>
-                <div className="group-hover:text-accent mt-4 text-lg font-semibold tracking-tight transition-colors">
+                <div className="group-hover:text-accent font-display mt-4 text-lg font-semibold transition-colors">
                   {agent.name}
                 </div>
                 <p className="text-ink-muted mt-2 flex-1 text-sm leading-snug">

@@ -10,7 +10,7 @@
  * so the comments in that file and this report cannot drift apart.
  *
  *   pnpm contrast
- *   pnpm contrast '#00c9b2' '#0a0d0f'   — one ad hoc pair
+ *   pnpm contrast '#4338ca' '#fbfbfd'   — one ad hoc pair
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -41,6 +41,37 @@ function ratio(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
+const hex = (r, g, b) =>
+  "#" +
+  [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+/**
+ * `rgb(255 255 255 / 0.58)` — the form the glass tokens are declared in.
+ * Returns null for anything else, including the legacy comma syntax, which
+ * this file does not use.
+ */
+function parseRgba(value) {
+  const m = value
+    ?.trim()
+    .match(/^rgb\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\/\s*([\d.]+)\s*\)$/);
+  return m ? { r: +m[1], g: +m[2], b: +m[3], a: +m[4] } : null;
+}
+
+/**
+ * Source-over. This is the only honest way to measure a translucent surface:
+ * a contrast ratio needs two opaque colors, so the glass has to be flattened
+ * against something before it means anything.
+ */
+function composite(fg, bgHex) {
+  const h = bgHex.replace("#", "");
+  const [br, bg, bb] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  return hex(
+    fg.r * fg.a + br * (1 - fg.a),
+    fg.g * fg.a + bg * (1 - fg.a),
+    fg.b * fg.a + bb * (1 - fg.a),
+  );
+}
+
 const [argA, argB] = process.argv.slice(2);
 if (argA && argB) {
   console.log(`${ratio(argA, argB).toFixed(2)}:1`);
@@ -65,7 +96,7 @@ function readTokens() {
   for (const [, name, value] of rootBlock
     .slice(0, scoped)
     .matchAll(
-      /^\s*--([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8}|var\(--[a-z0-9-]+\))\s*;/gm,
+      /^\s*--([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8}|rgb\([^;]*?\)|var\(--[a-z0-9-]+\))\s*;/gm,
     )) {
     raw[name] = value;
   }
@@ -75,17 +106,22 @@ function readTokens() {
   // indirection is the point: duplicated hexes silently survived a re-theme
   // once already. Resolve it here so the report measures real values.
   const tokens = {};
+  const alpha = {};
   for (const name of Object.keys(raw)) {
     let v = raw[name];
     for (let hops = 0; v?.startsWith("var(") && hops < 8; hops++) {
       v = raw[v.slice(6, -1)];
     }
     if (v?.startsWith("#")) tokens[name] = v;
+    else {
+      const rgba = parseRgba(v);
+      if (rgba) alpha[name] = rgba;
+    }
   }
-  return tokens;
+  return { tokens, alpha };
 }
 
-const t = readTokens();
+const { tokens: t, alpha } = readTokens();
 
 /**
  * floor 4.5 — body text and any value a reader has to read (WCAG AA).
@@ -176,8 +212,8 @@ const checks = [
   [
     "Tints — ink on the ground",
     [
-      ["clay-ink / ground", "tint-clay-ink", "ground", 4.5],
-      ["blue-ink / ground", "tint-blue-ink", "ground", 4.5],
+      ["rose-ink / ground", "tint-rose-ink", "ground", 4.5],
+      ["teal-ink / ground", "tint-teal-ink", "ground", 4.5],
       ["sage-ink / ground", "tint-sage-ink", "ground", 4.5],
       ["amber-ink / ground", "tint-amber-ink", "ground", 4.5],
       ["violet-ink / ground", "tint-violet-ink", "ground", 4.5],
@@ -186,8 +222,8 @@ const checks = [
   [
     "Tints — ink on its own wash",
     [
-      ["clay-ink / clay-wash", "tint-clay-ink", "tint-clay-wash", 4.5],
-      ["blue-ink / blue-wash", "tint-blue-ink", "tint-blue-wash", 4.5],
+      ["rose-ink / rose-wash", "tint-rose-ink", "tint-rose-wash", 4.5],
+      ["teal-ink / teal-wash", "tint-teal-ink", "tint-teal-wash", 4.5],
       ["sage-ink / sage-wash", "tint-sage-ink", "tint-sage-wash", 4.5],
       ["amber-ink / amber-wash", "tint-amber-ink", "tint-amber-wash", 4.5],
       ["violet-ink / violet-wash", "tint-violet-ink", "tint-violet-wash", 4.5],
@@ -196,8 +232,8 @@ const checks = [
   [
     "Tints — ink on white, for a tinted cell on a card",
     [
-      ["clay-ink / surface", "tint-clay-ink", "surface", 4.5],
-      ["blue-ink / surface", "tint-blue-ink", "surface", 4.5],
+      ["rose-ink / surface", "tint-rose-ink", "surface", 4.5],
+      ["teal-ink / surface", "tint-teal-ink", "surface", 4.5],
       ["sage-ink / surface", "tint-sage-ink", "surface", 4.5],
       ["amber-ink / surface", "tint-amber-ink", "surface", 4.5],
       ["violet-ink / surface", "tint-violet-ink", "surface", 4.5],
@@ -206,8 +242,8 @@ const checks = [
   [
     "Tints — body copy still readable on every wash",
     [
-      ["ink-muted / clay-wash", "ink-muted", "tint-clay-wash", 4.5],
-      ["ink-muted / blue-wash", "ink-muted", "tint-blue-wash", 4.5],
+      ["ink-muted / rose-wash", "ink-muted", "tint-rose-wash", 4.5],
+      ["ink-muted / teal-wash", "ink-muted", "tint-teal-wash", 4.5],
       ["ink-muted / sage-wash", "ink-muted", "tint-sage-wash", 4.5],
       ["ink-muted / amber-wash", "ink-muted", "tint-amber-wash", 4.5],
       ["ink-muted / violet-wash", "ink-muted", "tint-violet-wash", 4.5],
@@ -220,6 +256,85 @@ const checks = [
       ["d-syntax-attr / d-surface", "d-syntax-attr", "d-surface", 4.5],
       ["d-syntax-value / d-surface", "d-syntax-value", "d-surface", 4.5],
       ["d-syntax-punct / d-surface", "d-syntax-punct", "d-surface", 4.5],
+    ],
+  ],
+  /*
+   * Glass.
+   *
+   * These measure the `-solid` companions, which hold what each translucent
+   * surface composites to over the darkest point of its aura. The derivation
+   * check below proves those companions are real; these then treat them as
+   * ordinary opaque backgrounds.
+   *
+   * `ink-faint` on the plain 58% step is the one pair that fails. It is not
+   * listed here, because a row in an ok/FAIL column reads as a verdict on the
+   * palette rather than on a usage — it is reported on its own line below,
+   * next to the rule it is the reason for.
+   */
+  [
+    "Glass — light, over the hero aura floor",
+    [
+      ["ink / glass-solid", "ink", "glass-solid", 4.5],
+      ["ink-muted / glass-solid", "ink-muted", "glass-solid", 4.5],
+      ["ink / glass-strong-solid", "ink", "glass-strong-solid", 4.5],
+      [
+        "ink-muted / glass-strong-solid",
+        "ink-muted",
+        "glass-strong-solid",
+        4.5,
+      ],
+      [
+        "ink-faint / glass-strong-solid",
+        "ink-faint",
+        "glass-strong-solid",
+        4.5,
+      ],
+      ["accent / glass-strong-solid", "accent", "glass-strong-solid", 4.5],
+      ["grad-end / ground  (gradient fallback)", "grad-end", "ground", 4.5],
+      ["grad-end / surface-2", "grad-end", "surface-2", 4.5],
+    ],
+  ],
+  [
+    "Glass — dark, over the CTA aura peak",
+    [
+      ["d-ink / glass-dark-solid", "d-ink", "glass-dark-solid", 4.5],
+      [
+        "d-ink-muted / glass-dark-solid",
+        "d-ink-muted",
+        "glass-dark-solid",
+        4.5,
+      ],
+      [
+        "d-ink-faint / glass-dark-solid",
+        "d-ink-faint",
+        "glass-dark-solid",
+        4.5,
+      ],
+      ["d-accent / glass-dark-solid", "d-accent", "glass-dark-solid", 4.5],
+      ["d-legacy / glass-dark-solid", "d-legacy", "glass-dark-solid", 4.5],
+    ],
+  ],
+  /*
+   * Copy that sits on an aura directly rather than on glass. The CTA band's
+   * heading and lede do, so "a gradient never sits behind text" is enforced
+   * here rather than left to the comment in globals.css that asserts it.
+   *
+   * Each aura is measured at its own worst end: the hero at its darkest pixel,
+   * because the text on it is dark, and the CTA at its brightest, because the
+   * text on it is light.
+   */
+  [
+    "Auras — copy sitting on the gradient itself",
+    [
+      ["ink / aura-floor", "ink", "aura-floor", 4.5],
+      ["d-ink / aura-cta-peak", "d-ink", "aura-cta-peak", 4.5],
+      ["d-ink-muted / aura-cta-peak", "d-ink-muted", "aura-cta-peak", 4.5],
+      [
+        "d-accent / aura-cta-peak  (button edge)",
+        "d-accent",
+        "aura-cta-peak",
+        3.0,
+      ],
     ],
   ],
   [
@@ -261,18 +376,122 @@ for (const [group, rows] of checks) {
  * The two poles carry equal meaning — source and target — so neither may
  * outweigh the other, and they are luminance-matched for that reason.
  *
- * What the clay brand changed: the target pole is chromatic now and the source
- * pole is a near-neutral stone, so matched luminance no longer means matched
- * presence. Clay reads louder whatever the numbers say, which is correct — it
- * is the brand. The gap check stays because it still catches a pole drifting
- * far enough to vanish, but the real guard on this palette is the second check.
+ * The target pole is chromatic and the source pole a near-neutral stone, so
+ * matched luminance does not mean matched presence. The indigo reads louder
+ * whatever the numbers say, which is correct — it is the brand. The gap check
+ * stays because it still catches a pole drifting far enough to vanish, but the
+ * real guard on this palette is the second check.
  *
- * That one matters because the body and caption inks are warm greys: a source
- * pole sitting too close to --ink-faint stops reading as a pole and starts
- * reading as muted text. The separation there is by hue as much as luminance,
- * and a contrast ratio cannot see hue — so this reports the number and says
- * plainly that the rest is a visual check.
+ * That one matters because the body and caption inks are cool slate now and the
+ * source pole is warm stone: a pole sitting too close to --ink-faint stops
+ * reading as a pole and starts reading as muted text. The separation there is
+ * by hue entirely — these two are within 1.01:1 — and a contrast ratio cannot
+ * see hue, so this reports the number and says plainly that the rest is a
+ * visual check.
  */
+/*
+ * The glass companions, derived rather than trusted.
+ *
+ * `--glass-solid` is a plain hex sitting in the token block, and a plain hex is
+ * exactly the kind of value that survives a re-theme while everything around it
+ * changes — the same failure the `var()` indirection note above exists to stop.
+ * The difference here is that this one cannot be written as a `var()`, because
+ * it is the result of compositing two other tokens.
+ *
+ * So it is checked instead: flatten the translucent token over the aura floor
+ * it is legal on and confirm the answer is what the block claims. Move an aura
+ * stop or a glass alpha and this fails before any contrast pair does, which is
+ * the right order — every ratio above depends on these three being honest.
+ */
+const derived = [
+  ["glass-solid", "glass", "aura-floor"],
+  ["glass-strong-solid", "glass-strong", "aura-floor"],
+  ["glass-dark-solid", "glass-dark", "aura-cta-peak"],
+];
+
+console.log(
+  "\nGlass composites — derived from the alpha and the aura's worst pixel",
+);
+for (const [solid, translucent, floor] of derived) {
+  if (!alpha[translucent] || !t[floor] || !t[solid]) {
+    missing++;
+    console.log(`  ??   ${solid.padEnd(42)} missing token`);
+    continue;
+  }
+  const want = composite(alpha[translucent], t[floor]);
+  // One step per channel of rounding slack, nothing more.
+  const off = [0, 2, 4].some(
+    (i) =>
+      Math.abs(
+        parseInt(want.slice(i + 1, i + 3), 16) -
+          parseInt(t[solid].slice(i + 1, i + 3), 16),
+      ) > 1,
+  );
+  if (off) failures++;
+  console.log(
+    `  ${off ? "FAIL" : "ok  "} ${`${translucent} over ${floor}`.padEnd(42)} ${want}   declared ${t[solid]}`,
+  );
+}
+
+/*
+ * The gradient headline.
+ *
+ * `.text-gradient` paints type with a linear ramp, against the rule that a
+ * gradient never sits behind text. The exception is allowed because it is
+ * measured rather than asserted: both endpoints are tokens, and every point
+ * between them is sampled here. Checking only the two ends would not be enough
+ * — an interpolation between two passing colours can dip below either of them
+ * in the middle, since luminance is not linear in sRGB.
+ */
+function rampMin(from, to, bg, steps = 20) {
+  const read = (hex, i) => parseInt(hex.slice(i + 1, i + 3), 16);
+  let min = Infinity;
+  let at = 0;
+  for (let n = 0; n <= steps; n++) {
+    const t = n / steps;
+    const mixed = hex(
+      ...[0, 2, 4].map((i) => {
+        const a = read(from, i);
+        const b = read(to, i);
+        return a + (b - a) * t;
+      }),
+    );
+    const r = ratio(mixed, bg);
+    if (r < min) {
+      min = r;
+      at = t;
+    }
+  }
+  return { min, at };
+}
+
+console.log("\nGradient headline — sampled along the ramp, not just its ends");
+for (const bg of ["ground", "surface-2"]) {
+  if (!t["accent"] || !t["grad-end"] || !t[bg]) {
+    missing++;
+    console.log(`  ??   accent -> grad-end / ${bg.padEnd(30)} missing token`);
+    continue;
+  }
+  const { min, at } = rampMin(t["accent"], t["grad-end"], t[bg]);
+  const ok = min >= 4.5;
+  if (!ok) failures++;
+  console.log(
+    `  ${ok ? "ok  " : "FAIL"} ${`accent -> grad-end / ${bg}`.padEnd(42)} ${min
+      .toFixed(2)
+      .padStart(6)}:1   floor 4.5  (worst at t=${at.toFixed(2)})`,
+  );
+}
+
+/*
+ * The constraint the glass block in globals.css is written around. Not a check:
+ * the palette is not wrong, the usage would be. Reported so the number and the
+ * rule stay in the same place.
+ */
+const faintOnGlass = ratio(t["ink-faint"], t["glass-solid"]);
+console.log(
+  `\nink-faint on plain glass:              ${faintOnGlass.toFixed(2)}:1 - below 4.5, so faint ink goes on --glass-strong only`,
+);
+
 const poleGap = Math.abs(
   ratio(t["d-accent"], t["d-ground"]) - ratio(t["d-legacy"], t["d-ground"]),
 );

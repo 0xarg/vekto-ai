@@ -50,7 +50,7 @@ export default function UseCasesPage() {
                     </span>
                   )}
 
-                  <h2 className="group-hover:text-accent text-xl font-semibold tracking-tight transition-colors">
+                  <h2 className="group-hover:text-accent font-display text-xl font-semibold transition-colors">
                     {fm.title}
                   </h2>
                   <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">

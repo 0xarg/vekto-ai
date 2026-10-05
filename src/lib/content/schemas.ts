@@ -41,7 +41,36 @@ const sourcedFigure = z.object({
       10,
       "Every figure needs a source. Scope forbids unsourced statistics.",
     ),
+  /**
+   * Optional, and optional on purpose: a figure only gets drawn when the shape
+   * of it is declared here.
+   *
+   * `value` is a display string — "62%", "11 of 134", "Same quarter" — and the
+   * comparators that would size a bar live in the prose of `source` ("against a
+   * 14-month manual-migration estimate"). Parsing a number back out of either
+   * would be inferring a figure, which is exactly what the scope forbids. So
+   * the numbers a chart is drawn from are stated, and a figure without this
+   * field simply renders as type. Three of the six on the current case study
+   * can carry one; "Zero" and "Same quarter" cannot, and should not be made to.
+   */
+  chart: z
+    .discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("proportion"),
+        value: z.number().nonnegative(),
+        of: z.number().positive(),
+      }),
+      z.object({
+        kind: z.literal("comparison"),
+        value: z.number().nonnegative(),
+        against: z.number().positive(),
+        unit: z.string().min(1),
+      }),
+    ])
+    .optional(),
 });
+
+export type SourcedFigure = z.infer<typeof sourcedFigure>;
 
 export const caseStudySchema = base.extend({
   /** Anonymized is fine — "a global life-sciences manufacturer". */

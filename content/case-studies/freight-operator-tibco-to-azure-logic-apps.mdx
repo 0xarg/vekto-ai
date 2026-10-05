@@ -17,15 +17,28 @@ results:
   - label: "Elapsed time, assessment to go-live"
     value: "3.5 mo"
     source: "Engagement record, against a 14-month manual-migration estimate."
+    chart:
+      kind: "comparison"
+      value: 3.5
+      against: 14
+      unit: "months"
   - label: "Below the manual-migration quote"
     value: "62%"
     source: "Delivered cost against the customer's systems-integrator quote of approximately $1.6M."
+    chart:
+      kind: "proportion"
+      value: 62
+      of: 100
   - label: "P1 incidents, first 90 days live"
     value: "Zero"
     source: "Customer incident records for the 90 days following cutover."
   - label: "Flows flagged for manual review"
     value: "11 of 134"
     source: "Gap report issued after full conversion. No flow was silently converted."
+    chart:
+      kind: "proportion"
+      value: 11
+      of: 134
   - label: "Legacy TIBCO licenses decommissioned"
     value: "Same quarter"
     source: "Customer license position, same quarter as go-live."

@@ -6,8 +6,12 @@ import { ButtonLink } from "@/components/ui/button";
  * Closing call to action on the dark surface.
  *
  * No tone props. `data-tone="inverse"` paints the band and reassigns the
- * tokens, so `primary` resolves to the bright teal fill here and the deep one
+ * tokens, so `primary` resolves to the periwinkle fill here and the deep indigo
  * on a light band, each clearing the 3:1 floor for a control's own boundary.
+ *
+ * This is the second of the site's two auras, and the only one that appears on
+ * every page. Copy sits on the panel's own flat interior, never on a gradient
+ * stop — the aura carries the area around the words.
  *
  * The dark set is punctuation now rather than the dominant surface, so this is
  * one of only three places it appears: here, the code specimen's interior, and
@@ -28,7 +32,7 @@ export function CtaBand({
             instead of letting it bleed into the footer. */}
         <div
           data-tone="inverse"
-          className="mesh-cta shadow-panel overflow-hidden rounded-xl px-5 py-12 sm:px-12 sm:py-16"
+          className="aura-cta shadow-panel overflow-hidden rounded-xl px-5 py-12 sm:px-12 sm:py-16"
         >
           <div className="grid gap-8 md:grid-cols-[2fr_1fr] md:items-end">
             <div className="max-w-2xl">

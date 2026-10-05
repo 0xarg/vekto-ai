@@ -64,7 +64,7 @@ export default function SecurityPage() {
               key={q.question}
               className="grid gap-4 py-8 md:grid-cols-[1fr_1.4fr] md:gap-10"
             >
-              <dt className="text-lg font-semibold tracking-tight">
+              <dt className="font-display text-lg font-semibold">
                 {q.question}
               </dt>
               <dd className="text-ink-faint font-mono text-xs">

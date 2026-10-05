@@ -49,7 +49,7 @@ export default async function UseCasePage({ params }: Params) {
       >
         {/* The trigger in the buyer's own words — this is what the page
             is really about, and what they searched for. */}
-        <blockquote className="border-accent text-ink max-w-2xl border-l-2 pl-5 text-lg font-semibold tracking-tight">
+        <blockquote className="border-accent text-ink font-display max-w-2xl border-l-2 pl-5 text-lg font-semibold">
           &ldquo;{fm.trigger}&rdquo;
         </blockquote>
       </PageHeader>

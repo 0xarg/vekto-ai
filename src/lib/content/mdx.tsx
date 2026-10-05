@@ -28,7 +28,7 @@ const components = {
   ),
   h3: (props: React.ComponentPropsWithoutRef<"h3">) => (
     <h3
-      className="scroll-mt-anchor mt-10 mb-3 text-xl font-semibold tracking-tight"
+      className="scroll-mt-anchor font-display mt-10 mb-3 text-xl font-semibold"
       {...props}
     />
   ),
@@ -92,7 +92,7 @@ export function Mdx({
       className={cn(
         // `break-words` on inline code: a long identifier or URL in body copy
         // is the last way a single unbroken string can push the page sideways.
-        "prose prose-vekto prose-headings:font-normal prose-code:break-words max-w-none tracking-tight",
+        "prose prose-vekto prose-headings:font-display prose-headings:font-medium prose-code:break-words max-w-none",
         className,
       )}
     >

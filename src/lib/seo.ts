@@ -15,7 +15,7 @@ import { absoluteUrl } from "./utils";
  * failure mode that block in globals.css already warns about; this makes it a
  * loud one.
  */
-export const GROUND_HEX = "#faf9f5";
+export const GROUND_HEX = "#fbfbfd";
 
 type BuildMetadataArgs = {
   title: string;

@@ -155,7 +155,7 @@ export default async function AgentPage({ params }: Params) {
               <span className="text-ink-faint text-label block font-mono">
                 <span aria-hidden>&larr;</span> Previous stage
               </span>
-              <span className="group-hover:text-accent mt-3 block text-lg font-semibold tracking-tight transition-colors">
+              <span className="group-hover:text-accent font-display mt-3 block text-lg font-semibold transition-colors">
                 {previous.name}
               </span>
             </Link>
@@ -175,7 +175,7 @@ export default async function AgentPage({ params }: Params) {
               <span className="text-ink-faint text-label block font-mono">
                 Next stage <span aria-hidden>&rarr;</span>
               </span>
-              <span className="group-hover:text-accent mt-3 block text-lg font-semibold tracking-tight transition-colors">
+              <span className="group-hover:text-accent font-display mt-3 block text-lg font-semibold transition-colors">
                 {next.name}
               </span>
             </Link>

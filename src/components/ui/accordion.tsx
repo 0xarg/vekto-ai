@@ -25,7 +25,7 @@ export function Accordion({
     <div className={cn("border-rule divide-rule divide-y border-y", className)}>
       {items.map((item) => (
         <details key={item.question} className="disclosure group">
-          <summary className="hover:text-accent flex cursor-pointer list-none items-start justify-between gap-4 py-5 text-left text-base font-medium tracking-tight transition-colors duration-150 sm:gap-6 sm:text-lg [&::-webkit-details-marker]:hidden">
+          <summary className="hover:text-accent font-display flex cursor-pointer list-none items-start justify-between gap-4 py-5 text-left text-base font-medium transition-colors duration-150 sm:gap-6 sm:text-lg [&::-webkit-details-marker]:hidden">
             {item.question}
             <span
               aria-hidden

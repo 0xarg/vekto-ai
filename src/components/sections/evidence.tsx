@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/container";
 import { Label } from "@/components/ui/label";
 import { ButtonLink } from "@/components/ui/button";
 import { tints, type Tint } from "@/components/ui/card";
+import { FigureChart } from "@/components/diagrams/figure-chart";
 
 /**
  * The homepage's figures band, read from the most recent published case study.
@@ -23,7 +24,7 @@ import { tints, type Tint } from "@/components/ui/card";
  * production did until the client supplied one.
  */
 /** Rotated across the figure cells so a row of six is not one flat colour. */
-const figureTints: Tint[] = ["clay", "blue", "sage", "amber", "violet", "clay"];
+const figureTints: Tint[] = ["rose", "teal", "sage", "amber", "violet", "rose"];
 
 export function Evidence() {
   const study = getCollection("case-studies")[0];
@@ -70,6 +71,11 @@ export function Evidence() {
               >
                 {r.value}
               </dd>
+              {/* Drawn only where the figure declares the numbers behind it.
+                  Three of these six can; the other three render as type, which
+                  is correct — "Zero" and "Same quarter" have no shape. */}
+              <FigureChart figure={r} />
+
               {/* Every figure carries its source. The scope forbids unsourced
                   statistics and the schema enforces it — this line is the
                   reason the number above it is believable. */}

@@ -133,35 +133,50 @@ Page section plans live in the SEO blueprint artifact, not here.
 
 Light is the ground the page is written on. The near-black set is **punctuation**
 — it appears in exactly three places: the code specimen's interior, the pull
-quote, and the closing CTA panel.
+quote, and the closing CTA panel. Over both sits a third set, the glass
+surfaces, which are translucent and therefore belong to neither.
 
 ### Brand
 
-**Anthropic's clay.** The palette is theirs: clay `#CC785C`, ivory `#FAF9F5`,
-cream `#F0EEE6`, slate `#141413`, with dusty blue and sage as secondaries.
+**Cool white, deep indigo, two chromatic auras.** Ground `#FBFBFD`, white
+`#FFFFFF`, a cool alternating band `#F3F4F8`, near-black `#0C0D11`, and indigo
+`#4338CA`.
 
-- **Clay carries dark text, never white.** Clay measures 3.28:1 under white and
-  fails AA; under `--accent-ink` it is 5.08:1. White-on-color is what every
-  other site in this category ships and would have been wrong here on the
-  numbers alone. This is the rare case where the accessible answer is also the
-  more distinctive one — do not "fix" the button to white text.
-- **Two accent tokens, two jobs.** `--accent` is the deep step for text and
-  marks; `--accent-fill` is the clay itself, for fills only. Clay as text on
-  ivory is 3.11:1 and fails.
-- There is **no gradient**. An earlier pass used a teal-to-blue sweep on the
-  primary; clay is used flat, the way Anthropic uses it. The only survivor is a
-  hairline of warm light on the CTA panel's top edge.
+This is an amendment, and a large one. The palette was Anthropic's clay — clay
+`#CC785C` on ivory `#FAF9F5` with a cream `#F0EEE6` band — which landed after
+four rejected rounds and was then rejected itself: it read as warm and generic,
+the cream band was visibly yellow, and warm off-white is the most common ground
+on the web. The direction now is Auraform's, taken from its real values rather
+than its reputation.
+
+- **The accent carries white.** `#FFFFFF` on `#4338CA` measures 7.90:1, which
+  clears AA and AAA-large outright. The previous rule said the opposite — "clay
+  carries dark text, never white" — because clay measured 3.28:1 under white and
+  failed. That constraint went with the color that caused it; do not reinstate
+  dark-on-accent.
+- **Two accent tokens, two jobs.** `--accent` is text and marks, `--accent-fill`
+  is fills. They hold the same value today. They stay two tokens because they
+  are two jobs, and the clay palette is the proof that they can need to diverge.
+- There is **no gradient on a control**. The gradients on this site are the two
+  auras, and they are backdrops, never fills on a button or a chip.
 
 ### The two semantic poles
 
 `--accent` is the target pole, `--legacy` the source pole, and the site encodes
 direction of travel by color everywhere a migration is depicted.
 
-- **The source pole is a cool stone grey, and the coolness is load-bearing.**
-  Clay took the warm end of the palette and the body and caption inks are warm
-  greys, so an achromatic or warm source pole reads as muted text rather than as
-  a pole. It is luminance-matched to `--accent` (5.25 against 5.47) and
-  separated by hue instead.
+- **The source pole is a warm stone, and the warmth is load-bearing.** The poles
+  have swapped temperature: the target used to be warm clay against a cool stone
+  source, on warm paper. Now the target is cool and chromatic and the source is
+  warm and near-neutral.
+
+  The argument that put them on opposite sides of the wheel is unchanged, because
+  it was never about which side. The body and caption inks are cool slate on this
+  palette, so a cool source pole would read as muted text rather than as a pole.
+  `--legacy` and `--ink-faint` are within **1.01:1** of each other and always
+  have been — the separation is by hue entirely, which is why `pnpm contrast`
+  prints that number and says plainly that the rest is a visual check.
+
 - The poles are **no longer symmetric in presence**, and that is deliberate: the
   target pole is chromatic and leads because it is the brand; the source pole is
   near-neutral and recedes. `pnpm contrast` still checks the luminance gap, but
@@ -190,47 +205,72 @@ direction of travel by color everywhere a migration is depicted.
   scoping block reassigns light token names further down. For an ad-hoc pair use
   `node scripts/contrast.mjs '#aaa' '#bbb'`; `pnpm` does not forward the args and
   will silently print the full report instead.
+- The script now also **parses `rgb(r g b / a)` and composites**. A translucent
+  token cannot be contrast-checked on its own — a ratio needs two opaque colors —
+  so each glass step ships a `-solid` companion and the script flattens the alpha
+  over the aura's worst pixel and fails if the declared companion has drifted.
+  Move an aura stop and that check fails before any ratio does, which is the
+  right order.
 - **`--header-h` and `--header-gap`** are the single source for the nav island's
   geometry. `scroll-padding-top` and the mobile sheet's offset both derive from
   them. These were three independent values that had already drifted to 4rem
   against 6rem.
-- **Radius** is four steps: 2px for controls and marks, 4px, then 12 and 16 for
+- **Radius** is four steps: 4px for controls and marks, 10px, then 16 and 24 for
   cards and panels. **Elevation** is `--shadow-card` and `--shadow-panel` on
-  light, `--shadow-key` on dark, `--shadow-menu` for the dropdown.
+  light, `--shadow-glass` under a frosted panel, `--shadow-menu` for the
+  dropdown.
 - `src/lib/derived.ts` — counts, positions and the platform lists. The only
   sanctioned source for a numeral rendered as design.
 - `Readout` — a value with the thing it measures. `scale="display"` is only
   correct when the band exists to state that value.
 - `Card` — `raised` for a free-standing card, `ruled` for a flat cell inside a
-  `.lattice` where the grid draws the hairlines.
+  `.lattice` where the grid draws the hairlines, `glass` for a panel floating on
+  an aura. `glass` is illegal anywhere else — see the Glass section.
+- `Section` takes `align`, `decoration`, `panel` and `bleed` alongside the
+  older props. `align="center"` sets the eyebrow as a glass pill and is for
+  bands that make an argument; data bands stay `left`, because a centred header
+  above a ledger reads as marketing attached to a document. `decoration` makes
+  the band a positioning context and clips it, and is decorative only.
 - `.lattice` — a grid whose background shows through a 1px gap, instead of
-  `gap-px` on bordered children which doubles every interior hairline.
+  `gap-px` on bordered children which doubles every interior hairline. Lattice
+  cells stay **opaque**: there is nothing behind them for glass to be glass
+  against, and the hairlines are the structure.
 - `PendingSection` — collapses in production including its heading, because an
   empty `<h2>` reads as thin content to a crawler.
 
 ### Typography
 
-**No webfonts.** The stack is Apple's own — SF Pro Display for headings, SF Pro
-Text for body, SF Mono for code — reached through the system font stack in
+**No webfonts.** The stack is Apple's own — New York for headings, SF Pro Text
+for body, SF Mono for code — reached through the system font stack in
 `globals.css`, because those faces are not licensed for webfont use.
 
-- Headings are **weight 600 with tight tracking**, Apple's marketing setting.
-  The previous serif ran at one weight because its optical-size axis carried the
-  range; SF has no such axis, so weight does that work.
-- `font-serif` resolves to New York on Apple hardware but **is not used
-  anywhere** — the whole site is one sans voice. Do not reintroduce it piecemeal.
-- The site downloads **zero font files**. On Windows this falls back to Segoe UI
-  and on Android to Roboto, both more generic than SF. That tradeoff is inherent
-  to the brief and was accepted knowingly.
-- Three previous stacks were tried and rejected by the client: Newsreader+Inter,
-  then Fraunces+Instrument Sans. **Inter in particular reads as a default rather
-  than a decision** and should not come back.
+- Headings are **New York at weight 500**, loosely tracked. This reverses the
+  previous setting, and the reasoning reverses with it: SF ran at 600 with tight
+  tracking precisely because it has no optical-size axis and weight was the only
+  range available. New York has that axis, so size does the work again.
+- The serif used to be declared and deliberately unused — "the whole site is one
+  sans voice, do not reintroduce it piecemeal." It is the voice now. Headings
+  and anything that reads as a title take `font-display`; body, labels, controls
+  and the mono readouts stay sans.
+- The site downloads **zero font files**. On Windows the headings fall back to
+  Georgia and the body to Segoe UI, on Android to a generic serif and Roboto.
+  Georgia in particular is noticeably more dated than New York. That tradeoff is
+  inherent to the brief and was accepted knowingly.
+- This is the **fourth** type decision, and the client rejected three:
+  Newsreader+Inter, then Fraunces+Instrument Sans. New York is neither of the
+  rejected serifs, but treat it as live rather than settled. **Inter in
+  particular reads as a default rather than a decision** and should not come
+  back.
 
 ### The decorative tints
 
-Five hues — clay, dusty blue, sage, amber, violet — all from Anthropic's palette,
-in `:root` as `--tint-*`. Each has three steps because a base tint cannot carry
-text; the lightest measures 2.07:1 on the ground.
+Five hues — rose, teal, sage, amber, violet — in `:root` as `--tint-*`. Each has
+three steps because a base tint cannot carry text.
+
+Two were renamed when the brand moved. `clay` was byte-identical to the old
+`--accent-fill` and `blue` sits where the indigo accent now does: a decorative
+hue that exactly matches a pole is the failure the next bullet warns about, so
+they are `rose` and `teal`, chosen to clear both poles on the wheel.
 
 - `--tint-<hue>` is a fill or gradient stop, `--tint-<hue>-ink` is the step that
   can carry text or an icon, `--tint-<hue>-wash` is a cell background.
@@ -243,12 +283,57 @@ text; the lightest measures 2.07:1 on the ground.
 - `pnpm contrast` checks each hue four ways; **ink on its own wash** is the pair
   that breaks first if a wash is pushed for more colour.
 
-### Gradients
+### Auras
 
-`.mesh-warm`, `.mesh-cool` and `.mesh-cta` in `globals.css` are multi-stop radial
-meshes used as a panel's whole background. They **never sit behind text that has
-to be read** — a gradient cannot be contrast-checked against a moving target, so
-copy goes on a flat surface and the gradient carries the area around it.
+`.aura-hero`, `.aura-cta` and `.aura-quote` in `globals.css` are multi-stop
+radial meshes used as a panel's whole background. **Three** — the hero, the
+closing CTA, and the quote band. `.aura-quote` reuses `.aura-cta`'s exact stops
+and alphas and differs only in geometry, so both dark auras share one worst
+pixel and one set of solid companions; give a new aura its own ramp and it needs
+its own measurement. `CtaBand` renders on every page, so that one is site-wide; the
+hero aura is the landing one. They replace `.mesh-warm`, `.mesh-cool` and
+`.mesh-cta`; `.mesh-cool` had no consumers and was deleted rather than ported.
+
+They are not decoration added behind the glass. **They are the half of it that
+makes the other half legible** — a frosted panel over flat white is a grey box.
+
+- An aura **never sits behind copy that has to be read**, with one declared
+  exception: the CTA band's heading and lede sit on `.aura-cta` directly. That
+  is enforced rather than asserted — `pnpm contrast` measures both inks against
+  the aura's worst pixel.
+- `--aura-floor` and `--aura-cta-peak` are those worst pixels, **measured** by
+  rendering the gradient stack and sampling every pixel. Assuming total stop
+  overlap instead cost the hero two full steps of saturation before it was
+  measured.
+- The two are **opposite ends on purpose**. Dark text on the light aura is worst
+  at the aura's darkest pixel; light text on the CTA aura is worst at its
+  brightest. One shared "floor" token would have been wrong in one of the two
+  places, and silently.
+
+### Glass
+
+`.glass` (58% white) and `.glass-strong` (82%) in `globals.css`, both with
+`backdrop-filter`. They re-theme on a dark band through the scoping block, so a
+frosted panel on the CTA needs no variant of its own.
+
+Two rules, both load-bearing rather than stylistic:
+
+1. **Glass only sits on an aura.** Over flat `--ground` a translucent panel is
+   indistinguishable from a solid one and costs a compositing layer for nothing.
+   The nav island looks like an exception and is really the purest case: its
+   backdrop is the page scrolling under it.
+2. **`--ink-faint` may never sit on `--glass`.** Over the aura floor it measures
+   3.82:1 and fails; on `--glass-strong` it is 4.62:1 and passes. Eyebrows,
+   breadcrumbs and `Readout` labels go on the strong step or on a flat surface.
+   `--ink` and `--ink-muted` are fine on either.
+
+- Each step ships a `-solid` companion holding what it composites to over its
+  aura's worst pixel. That is what every text pair is measured against, and
+  `pnpm contrast` **derives** it rather than trusting the hex.
+- The `@supports not (backdrop-filter)` and `prefers-reduced-transparency`
+  fallbacks are **not progressive enhancement**. 58% white over a saturated aura
+  with no blur is unreadable, not merely plainer, so both fall back to the
+  opaque composite.
 
 ### Navbar
 
@@ -256,6 +341,12 @@ A floating pill island, detached from the top edge so the page scrolls visibly
 underneath it. One passive scroll listener drives one boolean, which tightens the
 island past 16px — deliberately not a scroll-linked animation, which would run
 work every frame to save a 300ms transition.
+
+It is `.glass-strong`, not `.glass`: its backdrop is arbitrary page content and a
+dark band can scroll under it, so the nav labels have to stay readable over
+whatever arrives. Past the threshold it also takes `.glass-raised` rather than a
+bare `shadow-panel` utility, which would replace `box-shadow` outright and take
+the inset hairline of light with it.
 
 Note when testing: **programmatic `window.scrollTo` does not dispatch a scroll
 event** in the browser-automation context, so the island will appear not to
@@ -277,24 +368,78 @@ a real BusinessWorks process and the Logic Apps workflow generated from it.
   token class resolves to a `--d-syntax-*` token and `pnpm contrast` can measure
   it.
 - The four syntax colors are the only colors on the site outside the two
-  semantic poles, and each states what a token _is_.
+  semantic poles, and each states what a token _is_. `tag` and `punct` reference
+  the two poles; `attr` moved from dusty blue to cyan when the target pole became
+  indigo, because a blue attribute name beside a periwinkle element name was two
+  blues rather than two classes.
+- `CodeCard` — the small pane in the hero — is the one place the dark set is
+  translucent, because the hero aura behind it is the thing being frosted. The
+  full two-pane `CodeTransform` sits on a flat band and stays opaque.
 
 ### Motion
 
 CSS only; there is no animation library and none should be added.
 
-- **Nothing gates content on scroll.** No `whileInView`, no IntersectionObserver
-  reveals. This is non-negotiable #2 and it is why the previous site shipped an
-  invisible mobile headline. Every reference site the client has offered —
-  zenflow, auraform, aiwork, agentik — has the same defect.
-- Entrance animation is for **marks only** — hairlines, ticks, the scan line —
-  never text, and runs on load rather than on intersection.
-- Marks animate on `transform` or `opacity` of a _tint behind_ text that is
-  already painted. Nothing that carries meaning starts at `opacity: 0`.
-- Two looping animations exist: the bus pulse and the specimen's scan line. Both
-  are switched off outright under `prefers-reduced-motion` rather than left to
-  the global guard, because an infinite animation forced to a single 0.01ms
-  iteration parks at whatever frame it lands on.
+- **Nothing gates content on scroll.** No `whileInView`, no reveal on
+  intersection. This is non-negotiable #2 and it is why the previous site
+  shipped an invisible mobile headline. Every reference site the client has
+  offered — zenflow, auraform, aiwork, agentik — has the same defect, and
+  Auraform's hero still renders blank until its appear effects fire.
+- **An observer may decorate; it may not gate.** This line used to read "no
+  IntersectionObserver reveals", which is the right rule stated in a way that
+  also banned things that are fine. `AgentRail` uses one observer to mark which
+  stage is current. Every stage's heading, copy, diagram and ledger is in the
+  server-rendered HTML and visible on arrival; with JavaScript off the rail
+  simply stops highlighting. The test is not which API is used, it is whether
+  anything is invisible until you scroll.
+- `position: sticky` is likewise fine, and is where most of the section rhythm
+  now comes from. It moves an element that is already painted.
+- Entrance animation is for **marks only** — hairlines, ticks, a diagram drawing
+  itself — never text, and runs on load rather than on intersection.
+- Marks animate on `transform`, on `stroke-dashoffset`, or on the opacity of a
+  _tint behind_ text that is already painted. Nothing that carries meaning
+  starts at `opacity: 0`.
+- **No count-up numerals, ever.** Auraform's figures band serialises `0M+` and
+  `0+` into its HTML and counts up on scroll. Our figures band is the sourced
+  one, so a crawler reading `0` is the single worst bug this site could ship.
+- Three looping animations exist: the bus pulse, the specimen's scan line and
+  the platform marquee. All are switched off outright under
+  `prefers-reduced-motion` rather than left to the global guard, because an
+  infinite animation forced to a single 0.01ms iteration parks at whatever frame
+  it lands on.
+
+### Diagrams
+
+`src/components/diagrams/` — inline SVG, no library. Before these the repo
+contained no SVG at all, so this is the shared contract rather than a style.
+
+- Colour resolves from `currentColor` or a token the caller sets. Never a hex
+  (non-negotiable #5), which is also what lets one diagram sit on a tinted card,
+  a dark band or a glass panel with no variant.
+- They draw themselves **on load**, via `stroke-dashoffset` on a stroke carrying
+  `pathLength="1"` so the dash length is normalised and nothing has to measure a
+  path. The resting state is the finished drawing.
+- **Do not add `vector-effect: non-scaling-stroke`.** It stops `pathLength` from
+  normalising `stroke-dasharray`, which is exactly what the draw-on animation
+  depends on. For the same reason a stroke cannot be both dashed and animated —
+  `animate-draw` owns the dasharray — so distinguish those by weight and colour.
+- **`agent-diagram.tsx` is registry-fed and may look like data.** Five
+  hand-authored forms, one per stage. They are hand-authored because
+  `inputs.length` is 2 and `outputs.length` is 3 for every agent in the
+  registry: anything keyed on those counts draws the same shape five times,
+  which is precisely what the bar-tick graphic these replaced did.
+- **`concept-diagram.tsx` is conceptual and must not look like data.** No axis,
+  no scale, no numeral. A bar chart asserts a measurement, and there is no
+  source for "how far a manual rewrite gets". An earlier version of the
+  engagement diagram drew a filled bar at 85/50/20 percent — a fabricated
+  statistic in a diagram's clothes. It marks one of three positions now, because
+  the ordering is something the copy supports and the distances are not.
+- `FigureChart` draws a sourced figure only when its frontmatter declares a
+  `chart` block, and returns `null` otherwise — the same discipline as
+  `Pending`. It never parses `value` or `source`: the comparators live in prose
+  ("against a 14-month manual-migration estimate") and inferring a number out of
+  a sentence to size a bar is what #6 forbids. "Zero" and "Same quarter" are
+  real figures with no shape, and they correctly get no bar.
 
 ### What keeps this from reading as a generated template
 
@@ -321,9 +466,19 @@ Still forbidden, and not negotiable:
 - A logo wall of customers we do not have. `PlatformStrip` fills that slot with
   platform names and states how much of the matrix is actually documented.
 - A decorative backdrop grid. Non-negotiable #6 names this exact element; the
-  hero uses `.hero-light`, a soft falloff that lights the panel, instead.
-- Violet or pink hero gradients, glassmorphism, glow orbs, sequential scroll
-  fade-ups, star ratings, stock avatars, sparkle motifs.
+  hero uses `.aura-hero` instead, which lights the panel and claims nothing.
+- Glow orbs, sequential scroll fade-ups, star ratings, stock avatars, sparkle
+  motifs.
+
+**Glassmorphism came off this list**, along with the ban on chromatic hero
+gradients — they are the direction now, and they are governed by the Glass and
+Auras sections rather than forbidden.
+
+Scroll fade-ups did **not** come off, and the reason is worth recording. Auraform
+is where the surfaces came from, and its own hero renders blank on arrival: the
+headline only appears once its Framer appear effects fire. That is precisely the
+defect this rebuild exists to fix (#2). Borrowing a site's surfaces is not
+borrowing its behavior.
 
 Content is much thinner in production than in preview: `<Pending>`, draft
 migration pairs and draft MDX entries are all stripped, so preview shows two

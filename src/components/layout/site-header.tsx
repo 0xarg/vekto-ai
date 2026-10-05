@@ -108,7 +108,14 @@ export function SiteHeader() {
   return (
     /* A floating island rather than a full-width bar. It is detached from the
        top edge, so the page visibly scrolls underneath it, and it tightens once
-       you are past the hero. `--header-h` and `--header-gap` in globals.css are
+       you are past the hero.
+
+       This is the one glass surface that does not sit on an aura, and it is not
+       an exception to the rule so much as the purest case of it: its backdrop is
+       the page, which is exactly what it is there to let you see. It takes the
+       82% step rather than the 58% one because that backdrop is arbitrary — a
+       dark band can scroll under it — and the nav labels have to stay readable
+       over whatever arrives. `--header-h` and `--header-gap` in globals.css are
        the single source for its geometry — `scroll-padding-top`, the anchor
        offset and the mobile sheet all derive from them, because those values
        used to be written out independently and had already drifted apart.
@@ -131,10 +138,10 @@ export function SiteHeader() {
 
       <div
         className={cn(
-          "border-rule bg-surface/85 mx-auto flex items-center justify-between gap-4 rounded-full border pr-2 pl-5 backdrop-blur-xl lg:gap-6",
+          "glass-strong glass-pill mx-auto flex items-center justify-between gap-4 rounded-full pr-2 pl-5 lg:gap-6",
           "3xl:max-w-7xl max-w-6xl",
           "transition-[box-shadow,max-width,height] duration-300 ease-out",
-          scrolled ? "shadow-panel 3xl:max-w-6xl md:max-w-5xl" : "shadow-card",
+          scrolled && "glass-raised 3xl:max-w-6xl md:max-w-5xl",
         )}
         style={{ height: "var(--header-h)" }}
       >
@@ -192,7 +199,7 @@ export function SiteHeader() {
                   {open && (
                     <div
                       className={cn(
-                        "border-rule bg-surface shadow-menu animate-menu-in absolute top-full mt-2 w-80 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-xl border",
+                        "glass-strong animate-menu-in absolute top-full mt-2 w-80 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-xl",
                         last ? "right-0" : "left-0",
                       )}
                       onMouseEnter={cancelClose}
@@ -284,7 +291,7 @@ export function SiteHeader() {
           aria-modal="true"
           aria-label="Site menu"
           tabIndex={-1}
-          className="border-rule bg-ground fixed inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-contain border-t outline-none md:hidden"
+          className="glass-strong fixed inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-contain rounded-none border-x-0 border-b-0 outline-none md:hidden"
           style={{
             top: "calc(var(--header-h) + var(--header-gap) * 2)",
             paddingBottom: "env(safe-area-inset-bottom)",

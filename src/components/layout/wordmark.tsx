@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cn("flex items-baseline gap-2", className)}>
-      <span className="text-ink text-[1.375rem] leading-none font-semibold tracking-tight">
+      <span className="text-ink font-display text-[1.375rem] leading-none font-semibold">
         Vekto
         <span className="text-accent">.</span>
       </span>

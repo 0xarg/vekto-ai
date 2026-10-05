@@ -74,7 +74,7 @@ export default function PlatformPage() {
         <div className="lattice sm:grid-cols-2 lg:grid-cols-3">
           {outputs.map((item) => (
             <div key={item.title} className="p-6">
-              <h3 className="text-lg font-semibold tracking-tight">
+              <h3 className="font-display text-lg font-semibold">
                 {item.title}
               </h3>
               <p className="text-ink-muted mt-3 text-sm leading-relaxed">

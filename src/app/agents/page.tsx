@@ -34,7 +34,7 @@ export default function AgentsPage() {
                   {String(agent.step).padStart(2, "0")}
                 </div>
                 <div className="max-w-2xl">
-                  <h2 className="group-hover:text-accent text-h3 font-semibold tracking-tight transition-colors">
+                  <h2 className="group-hover:text-accent text-h3 font-display font-semibold transition-colors">
                     {agent.name}
                   </h2>
                   <p className="text-ink-muted mt-3 leading-relaxed">

@@ -14,13 +14,13 @@ import { cn } from "@/lib/utils";
  * one. Tints exist to give a grid of cells visual variety, nothing more.
  */
 export const tints = {
-  clay: {
-    "--chip-wash": "var(--tint-clay-wash)",
-    "--chip-ink": "var(--tint-clay-ink)",
+  rose: {
+    "--chip-wash": "var(--tint-rose-wash)",
+    "--chip-ink": "var(--tint-rose-ink)",
   },
-  blue: {
-    "--chip-wash": "var(--tint-blue-wash)",
-    "--chip-ink": "var(--tint-blue-ink)",
+  teal: {
+    "--chip-wash": "var(--tint-teal-wash)",
+    "--chip-ink": "var(--tint-teal-ink)",
   },
   sage: {
     "--chip-wash": "var(--tint-sage-wash)",
@@ -48,9 +48,14 @@ export function Card({
   className,
   children,
 }: {
+  /**
+   * `glass` is legal only inside an aura panel. Over flat `--ground` a
+   * translucent card is indistinguishable from a solid one and costs a
+   * compositing layer for nothing — see the glass block in globals.css.
+   */
   /** Renders the whole card as a link when set. */
   href?: string;
-  variant?: "raised" | "ruled";
+  variant?: "raised" | "ruled" | "glass";
   /** Decorative hue for the icon chip and, with `washed`, the card's fill. */
   tint?: Tint;
   /** Goes in a `.chip` tile above the content. */
@@ -62,23 +67,29 @@ export function Card({
   className?: string;
   children: React.ReactNode;
 }) {
+  const lifted = variant === "raised" || variant === "glass";
+
   const classes = cn(
     "group flex flex-col",
-    variant === "raised"
-      ? "border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden"
-      : "transition-colors hover:bg-surface-2",
+    variant === "raised" &&
+      "border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
     variant === "raised" && (washed && tint ? "shadow-tint" : "bg-surface"),
+    variant === "glass" &&
+      "glass rounded-lg transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
+    variant === "ruled" && "transition-colors hover:bg-surface-2",
     // Only a card that goes somewhere lifts. A static one rising under the
     // cursor promises a click that is not there.
-    href &&
-      variant === "raised" &&
-      "hover:border-accent-line hover:shadow-panel hover:-translate-y-0.5",
+    href && lifted && "hover:border-accent-line hover:-translate-y-0.5",
+    href && variant === "raised" && "hover:shadow-panel",
     className,
   );
 
   const style = {
     ...(tint ? tints[tint] : {}),
-    ...(washed && tint ? { backgroundColor: "var(--chip-wash)" } : {}),
+    // A wash is an opaque fill, so it would paint over the glass and defeat it.
+    ...(washed && tint && variant === "raised"
+      ? { backgroundColor: "var(--chip-wash)" }
+      : {}),
   } as React.CSSProperties;
 
   const inner = (

@@ -97,7 +97,12 @@ function CodePane({
 }
 
 /**
- * A single pane at a size that fits in a hero, floating on a gradient panel.
+ * A single pane at a size that fits in a hero, frosted over the hero aura.
+ *
+ * This is the one place the dark set is translucent. It works because the aura
+ * behind it is the thing being frosted; the full two-pane figure below sits on
+ * a flat band and stays opaque, because there would be nothing for glass to be
+ * glass against.
  *
  * The full two-pane figure is ~400px of code with no height cap, which made it
  * the tallest and widest object on the page and left the headline arguing for
@@ -114,7 +119,7 @@ export function CodeCard({ className }: { className?: string }) {
   return (
     <figure
       data-tone="inverse"
-      className={`shadow-panel w-full max-w-sm rounded-lg border ${className ?? ""}`}
+      className={`glass w-full max-w-sm overflow-hidden rounded-lg ${className ?? ""}`}
     >
       <figcaption className="border-rule flex items-center justify-between gap-3 border-b px-4 py-2.5">
         <span className="text-ink text-[0.8125rem]">

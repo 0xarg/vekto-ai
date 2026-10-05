@@ -4,11 +4,12 @@ import {
   sourcePlatforms,
   targetPlatforms,
 } from "@/lib/derived";
+import type { Platform } from "@/content/platforms";
 import { Container } from "@/components/ui/container";
 import { Label } from "@/components/ui/label";
 
 /**
- * The platform names, set as a wordmark strip.
+ * The platform names, set as a moving wordmark strip.
  *
  * This occupies the slot every reference site fills with a customer logo wall.
  * We have no customer logos and no permission to show any, so this shows the
@@ -22,7 +23,57 @@ import { Label } from "@/components/ui/label";
  * the published count sits next to it rather than being left for the visitor to
  * discover on /migrations. Leading with the limit is what makes the rest of the
  * page credible.
+ *
+ * It scrolls because a logo wall moves, and because there are only seven names:
+ * a static row of seven words reads as a short list, where a continuous one
+ * reads as an inventory. The two rows travel opposite ways, sources against
+ * targets, which is the same direction-of-travel encoding the rest of the site
+ * uses. `platforms.ts` carries no logo, icon or colour field, so this is type —
+ * which is the honest version of this band anyway.
  */
+function Row({
+  platforms,
+  tone,
+  reverse,
+}: {
+  platforms: Platform[];
+  tone: "legacy" | "accent";
+  reverse?: boolean;
+}) {
+  // Two identical halves, translated by exactly -50%, is what makes the loop
+  // seamless. The second half is hidden from the accessibility tree so the
+  // names are not announced twice.
+  const half = (hidden?: boolean) => (
+    <ul
+      aria-hidden={hidden}
+      className="flex shrink-0 items-center gap-x-10 pr-10 sm:gap-x-14 sm:pr-14"
+    >
+      {platforms.map((p) => (
+        <li
+          key={p.id}
+          className={`text-lg font-medium whitespace-nowrap ${
+            tone === "legacy" ? "text-legacy" : "text-accent"
+          }`}
+        >
+          {p.shortName}
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <div className="flex min-w-0 overflow-hidden">
+      <div
+        className="animate-marquee flex w-max"
+        style={reverse ? { animationDirection: "reverse" } : undefined}
+      >
+        {half()}
+        {half(true)}
+      </div>
+    </div>
+  );
+}
+
 export function PlatformStrip() {
   return (
     <section
@@ -40,40 +91,9 @@ export function PlatformStrip() {
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-5 sm:flex-row sm:items-center sm:gap-8">
-            <ul className="flex flex-wrap items-center gap-x-7 gap-y-3">
-              {sourcePlatforms.map((p) => (
-                <li
-                  key={p.id}
-                  className="text-legacy text-lg font-medium whitespace-nowrap"
-                >
-                  {p.shortName}
-                </li>
-              ))}
-            </ul>
-
-            {/* Below `sm` the two lists stack, so the separator turns to point
-                the way the layout actually reads. `self-start` because a flex
-                item stretches across the cross axis by default — as a
-                full-width block, rotating it swung the glyph out of the gap
-                entirely. */}
-            <span
-              aria-hidden
-              className="text-ink-faint shrink-0 rotate-90 self-start font-mono sm:rotate-0 sm:self-auto"
-            >
-              &rarr;
-            </span>
-
-            <ul className="flex flex-wrap items-center gap-x-7 gap-y-3">
-              {targetPlatforms.map((p) => (
-                <li
-                  key={p.id}
-                  className="text-accent text-lg font-medium whitespace-nowrap"
-                >
-                  {p.shortName}
-                </li>
-              ))}
-            </ul>
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <Row platforms={sourcePlatforms} tone="legacy" />
+            <Row platforms={targetPlatforms} tone="accent" reverse />
           </div>
         </div>
       </Container>

@@ -14,8 +14,10 @@ import { CodeCard } from "./code-transform";
  * DOM. Every reference site the client offered has that defect; the register is
  * borrowed, the bug is not.
  *
- * Split: the argument runs down the left, and the right is a gradient panel
- * carrying one small card.
+ * Split: the argument runs down the left, and the right is the hero aura
+ * carrying one frosted card. The aura is not decoration added behind the card —
+ * it is what makes the card read as glass rather than as a grey box, which is
+ * the whole reason there are only two of them on the site.
  *
  * An earlier version put the full two-pane code figure here. It had no height
  * cap, sat in the wider of the two columns, and ended up the largest object on
@@ -62,7 +64,7 @@ export function Hero({
               {eyebrow && pair && (
                 <Link
                   href={`/migrations/${pair.slug}`}
-                  className="border-rule bg-surface shadow-card text-ink-muted hover:border-accent-line hover:text-ink mb-8 inline-flex items-center gap-2.5 rounded-full border py-1.5 pr-4 pl-2.5 text-sm transition-colors"
+                  className="glass-strong glass-pill text-ink-muted hover:border-accent-line hover:text-ink mb-8 inline-flex items-center gap-2.5 rounded-full py-1.5 pr-4 pl-2.5 text-sm transition-colors"
                 >
                   <span className="text-label text-accent font-mono uppercase">
                     {eyebrow}
@@ -108,7 +110,7 @@ export function Hero({
             {/* The gradient does the visual work; the card is the proof sitting
                 on it. */}
             {specimen && (
-              <div className="mesh-warm border-rule relative flex min-h-[16rem] min-w-0 items-center justify-center rounded-xl border p-5 sm:min-h-[22rem] sm:p-12">
+              <div className="aura-hero border-rule relative flex min-h-[16rem] min-w-0 items-center justify-center overflow-hidden rounded-xl border p-5 sm:min-h-[22rem] sm:p-12">
                 <CodeCard />
               </div>
             )}

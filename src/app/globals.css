@@ -2,7 +2,7 @@
 @plugin "@tailwindcss/typography";
 
 /* ---------------------------------------------------------------------------
-   Design tokens — dark instrument panel over light reading surfaces.
+   Design tokens — cool glass over two chromatic auras.
 
    Nothing here is inherited from the previous site. Every color in the app
    resolves through these variables, so a re-theme is this block, not the
@@ -14,119 +14,195 @@
    `[data-tone="inverse"]` block below, so a component never has to know which
    band it is sitting on.
 
+   A third set sits on top of both: the glass surfaces. Those are translucent,
+   which means they cannot be contrast-checked on their own — a ratio needs two
+   opaque colors. Each one therefore ships with a `-solid` companion holding the
+   color it composites to over the darkest point of the aura it is legal on, and
+   `pnpm contrast` derives that companion rather than trusting it.
+
    Contrast ratios in the comments below are measured against the surfaces the
    value is actually used on, not estimated. If you move a surface, re-derive
    the foregrounds that sit on it. There is a script for this — see AGENTS.md.
    --------------------------------------------------------------------------- */
 :root {
-  /* Surfaces — Anthropic's warm paper scale. Ivory ground, white for lifted
-     cards, cream for the alternating band. The previous cool grey was chosen
-     when the accent was teal; clay sits wrong on a cool ground and right on
-     this one. */
-  --ground: #faf9f5;
+  /* Surfaces — a near-neutral white scale with a faint cool cast. The previous
+     warm paper scale (ivory #faf9f5, cream #f0eee6) was chosen for Anthropic's
+     clay; the cream band in particular read as visibly yellow, and warm
+     off-white is the most common ground on the web. Cool white is what makes
+     the glass above it look like glass rather than like fogged paper. */
+  --ground: #fbfbfd;
   --surface: #ffffff;
-  --surface-2: #f0eee6;
-  --inverse: #1f1e1d;
+  --surface-2: #f3f4f8;
 
-  /* Hairlines — the primary structural device in this direction */
-  --rule: #e4e1d9; /* 1.24:1 off --ground */
-  --rule-strong: #cfcbbe; /* 1.54:1 */
-  --rule-inverse: #2a2926;
+  /* Hairlines. Still the primary structural device — this direction borrows
+     Auraform's surfaces, not its complete absence of borders, because the
+     `.lattice` grids and the coverage matrix are built out of rules. */
+  --rule: #dfe2eb; /* 1.25:1 off --ground */
+  --rule-strong: #cfd3e0; /* 1.45:1 */
 
   /* Text */
-  --ink: #1f1e1d; /* 17.50:1 on --ground */
-  --ink-muted: #5a584f; /* 6.77 ground / 7.13 surface / 6.14 surface-2 */
+  --ink: #171920; /* 16.98:1 on --ground */
+  --ink-muted: #51576b; /* 6.95 ground / 7.18 surface / 6.53 surface-2 */
   /* Carries every eyebrow, breadcrumb and numeric readout, so it has to clear
-     4.5:1 on all three light surfaces, not just on white. */
-  --ink-faint: #6b6960; /* 5.23 / 5.51 / 4.74 */
+     4.5:1 on all three light surfaces, not just on white. It is also the one
+     ink that fails on `--glass` — see the glass block below. */
+  --ink-faint: #646b82; /* 5.12 / 5.29 / 4.82 */
 
   /* Text on the dark set. */
   --ink-inverse: #faf9f5;
-  --ink-inverse-muted: #b5b2a8; /* 8.69:1 on --d-ground */
-  --ink-inverse-faint: #8e8b81; /* 5.41:1 on --d-ground */
-  --inverse-lifted: #1c1b19;
+  --ink-inverse-muted: #b5b2a8;
+  --ink-inverse-faint: #8e8b81;
 
   /* ---------------------------------------------------------------------
      Accent — the brand, and the target pole.
 
-     Anthropic's clay. It carries two jobs that need two values: a fill, which
-     is the clay itself, and text/marks, which clay cannot do. Clay measures
-     3.28:1 as text on white and fails AA; it also fails under white text, at
-     the same 3.28:1. What it does carry is near-black ink, at 5.08:1 — which is
-     how Anthropic uses it, and why the primary button is clay with dark text
-     rather than the white-on-color every other SaaS site ships.
+     A deep indigo. It replaces Anthropic's clay, which was the warmest thing
+     on the page and the reason the whole surface read as beige.
+
+     Unlike clay, this carries white: #ffffff on it measures 7.90:1, which
+     clears AA and AAA-large outright. The old rule that the primary button had
+     to take near-black text existed because clay measured 3.28:1 under white
+     and failed; that constraint is gone with the color that caused it.
+
+     `--accent` and `--accent-fill` are the same value here. They stay two
+     tokens because they are two jobs — text/marks and fills — and a future
+     palette may need them to diverge again, as the clay one did.
      --------------------------------------------------------------------- */
-  --accent: #a14e2f; /* text/marks — 5.47 ground / 5.78 surface / 4.97 surface-2 */
-  --accent-hover: #8a4227;
-  /* The fill. Dark ink sits on it, never white. */
-  --accent-fill: #cc785c;
-  --accent-fill-hover: #bd6a4e;
-  --accent-ink: #1f1e1d; /* 5.08:1 on --accent-fill */
-  --accent-soft: rgb(204 120 92 / 0.1);
-  --accent-line: rgb(204 120 92 / 0.32);
-  --accent-wash: #f9f1ec;
+  --accent: #4338ca; /* 7.65 ground / 7.90 surface / 7.19 surface-2 */
+  --accent-hover: #372fa8;
+  --accent-fill: #4338ca;
+  --accent-fill-hover: #372fa8;
+  --accent-ink: #ffffff; /* 7.90:1 on --accent-fill */
+  --accent-soft: rgb(67 56 202 / 0.08);
+  --accent-line: rgb(67 56 202 / 0.28);
+  --accent-wash: #eef0fb;
 
   /* ---------------------------------------------------------------------
      Legacy — the source pole, for legacy systems in migration diagrams.
      Never used for CTAs.
 
-     A cool stone grey, and the coolness is the whole point. Clay took the warm
-     end of the palette, and the body and caption inks are warm greys, so an
-     achromatic or warm source pole would read as muted text rather than as a
-     pole. This is luminance-matched to --accent (5.25 against 5.47) and
-     separated from it by hue instead — which is also what keeps a source chip
-     and a target chip legible side by side.
+     A warm stone. The poles have swapped temperature: the target pole used to
+     be warm clay against a cool stone source, and both of those sat on warm
+     paper. Now the target is cool and chromatic and the source is warm and
+     near-neutral.
+
+     The argument that put them on opposite sides of the wheel survives intact,
+     because it was never about which side: the body and caption inks are cool
+     slate on this palette, so a cool source pole would read as muted text
+     rather than as a pole. It is the hue separation that keeps a source chip
+     and a target chip legible side by side, not the luminance — the two are
+     within 1.01:1 of each other and always have been.
      --------------------------------------------------------------------- */
-  --legacy: #5b6b73; /* 5.25 ground / 5.53 surface / 4.76 surface-2 */
-  --legacy-soft: rgb(91 107 115 / 0.09);
-  --legacy-line: rgb(91 107 115 / 0.28);
-  --legacy-wash: #eff1f2;
+  --legacy: #7c6956; /* 5.06 ground / 5.23 surface / 4.76 surface-2 */
+  --legacy-soft: rgb(124 105 86 / 0.09);
+  --legacy-line: rgb(124 105 86 / 0.28);
+  --legacy-wash: #f3f1ed;
 
   /* ---------------------------------------------------------------------
      The decorative tints.
 
-     Five hues, all from Anthropic's palette, used for surface — bento washes,
-     icon chips, gradient panels. They are deliberately NOT semantic: clay is
-     the brand and the target pole, the cool stone is the source pole, and
-     nothing else in this block carries meaning. If a tint ever starts standing
-     for a concept, the migration diagrams stop being readable.
+     Five hues used for surface — bento washes, icon chips, graphic zones. They
+     are deliberately NOT semantic: `--accent` is the target pole, `--legacy`
+     the source pole, and nothing else in this block carries meaning. If a tint
+     ever starts standing for a concept, the migration diagrams stop being
+     readable.
 
-     Each hue needs three steps because a base tint cannot carry text — the
-     lightest measures 2.07:1 on the ground. `-ink` is the step that can.
+     The set was `clay, blue, sage, amber, violet` and two of those have been
+     renamed. `clay` was byte-identical to the old `--accent-fill` and `blue`
+     now sits where the indigo accent does — a decorative hue that exactly
+     matches a pole is the failure this block warns about, so they are `rose`
+     and `teal` instead, chosen to clear both poles on the wheel.
+
+     Each hue needs three steps because a base tint cannot carry text. `-ink` is
+     the step that can.
      --------------------------------------------------------------------- */
-  --tint-clay: #cc785c;
-  --tint-clay-ink: #a14e2f; /* 5.47:1 on --ground */
-  --tint-clay-wash: #f8e9e0;
+  --tint-rose: #e79aad;
+  --tint-rose-ink: #cd244e; /* 5.13:1 on --ground */
+  --tint-rose-wash: #fceaef;
 
-  --tint-blue: #6a9bcc;
-  --tint-blue-ink: #34658f; /* 5.86:1 */
-  --tint-blue-wash: #e6eef7;
+  --tint-teal: #25c2d0;
+  --tint-teal-ink: #107780; /* 5.11:1 */
+  --tint-teal-wash: #d2f5f8;
 
-  --tint-sage: #788c5d;
-  --tint-sage-ink: #4a5e34; /* 6.78:1 */
-  --tint-sage-wash: #eaf0e3;
+  --tint-sage: #8cbe68;
+  --tint-sage-ink: #4a772a; /* 5.13:1 */
+  --tint-sage-wash: #e4f3da;
 
-  --tint-amber: #d9a84a;
-  --tint-amber-ink: #845b14; /* 5.72:1 */
-  --tint-amber-wash: #faf0da;
+  --tint-amber: #dba832;
+  --tint-amber-ink: #8a6611; /* 5.09:1 */
+  --tint-amber-wash: #f8eed5;
 
-  --tint-violet: #8b7bb8;
-  --tint-violet-ink: #5d5084; /* 6.77:1 */
-  --tint-violet-wash: #efebf7;
+  --tint-violet: #c5a3e2;
+  --tint-violet-ink: #9045d1; /* 5.13:1 */
+  --tint-violet-wash: #f3ebfa;
 
   /* Status poles for content confirmed vs unconfirmed. `positive` marks a
      migration pair the client has confirmed; `warn` marks scaffolding and
      outstanding content. Both are derived from data, never decorative. */
-  --positive: #4a6b4e;
-  --positive-soft: rgb(74 107 78 / 0.09);
-  --positive-line: rgb(74 107 78 / 0.28);
-  --warn: #8a6414;
-  --warn-soft: rgb(138 100 20 / 0.09);
-  --warn-line: rgb(138 100 20 / 0.28);
+  --positive: #3f7a57;
+  --positive-soft: rgb(63 122 87 / 0.09);
+  --positive-line: rgb(63 122 87 / 0.28);
+  --warn: #8a6611;
+  --warn-soft: rgb(138 102 17 / 0.09);
+  --warn-line: rgb(138 102 17 / 0.28);
 
   /* References --accent rather than copying its value. This used to be a
      duplicated hex and silently kept the old color through a re-theme. */
   --focus: var(--accent);
+
+  /* -------------------------------------------------------------------------
+     Glass.
+
+     A translucent surface is only a surface when something is behind it, so
+     these are not general-purpose fills. Two rules govern every use, and both
+     are load-bearing rather than stylistic:
+
+     1. Glass only sits on an aura. Over flat `--ground` a translucent panel is
+        indistinguishable from a solid one and costs a compositing layer for
+        nothing. The nav island is the one apparent exception and is really the
+        purest case: its backdrop is the page scrolling under it.
+     2. `--ink-faint` may never sit on `--glass`. Composited over the aura floor
+        it measures 3.82:1 and fails; on `--glass-strong` it measures 4.62:1 and
+        passes. Eyebrows, breadcrumbs and `Readout` labels therefore go on the
+        strong step or on a flat surface. `--ink` (12.67) and `--ink-muted`
+        (5.18) are fine on either.
+     ------------------------------------------------------------------------- */
+  --glass: rgb(255 255 255 / 0.58);
+  --glass-strong: rgb(255 255 255 / 0.82);
+  --glass-faint: rgb(255 255 255 / 0.3);
+  --glass-edge: rgb(255 255 255 / 0.65); /* the inset hairline of light */
+  --glass-rule: rgb(23 25 32 / 0.08);
+  --glass-blur: 20px;
+  --glass-blur-sm: 10px;
+
+  --glass-dark: rgb(12 13 17 / 0.72);
+  --glass-dark-rule: rgb(255 255 255 / 0.09);
+
+  /* The worst point of each aura, measured by rendering the gradient stack and
+     sampling every pixel rather than by assuming total overlap — assuming it
+     cost two full steps of saturation the hero could have had.
+
+     The two are opposite ends on purpose. Dark text on the light aura is worst
+     at its DARKEST pixel; light text on the CTA aura is worst at its BRIGHTEST
+     one. A single "floor" token for both would have been wrong in one of the
+     two places, and silently. */
+  --aura-floor: #a5a2f2; /* hero, darkest pixel */
+  --aura-cta-peak: #0c3145; /* CTA, brightest pixel */
+
+  /* What each glass surface composites to over its own aura floor. A
+     translucent token cannot be contrast-checked against a moving backdrop, so
+     the worst case is pinned here and every text pair is measured against it.
+     `pnpm contrast` re-derives these by compositing the alpha above over the
+     floor above and fails if they have drifted — they are not hand-typed
+     values to be trusted. */
+  /* The far end of the one gradient headline. Measured on --ground like any
+     other text colour, and the ramp between this and --accent is sampled by
+     pnpm contrast rather than assumed to be safe. */
+  --grad-end: #8b2fb8;
+
+  --glass-solid: #d9d8fa;
+  --glass-strong-solid: #efeefd;
+  --glass-dark-solid: #0c1720;
 
   /* -------------------------------------------------------------------------
      The dark set.
@@ -135,39 +211,39 @@
      system can be read, and measured, side by side. Nothing consumes `--d-*`
      directly — the block below aliases them onto the real token names.
      ------------------------------------------------------------------------- */
-  --d-ground: #141413; /* Anthropic slate — 17.50:1 off --ground */
-  --d-surface: #1c1b19;
-  --d-surface-2: #232220;
+  --d-ground: #0c0d11; /* 18.79:1 off --ground */
+  --d-surface: #15171e;
+  --d-surface-2: #1c1f29;
 
-  --d-rule: #2a2926; /* 1.27:1 off --d-ground */
-  --d-rule-strong: #3a3834;
+  --d-rule: #222531; /* 1.27:1 off --d-ground, 1.17 off --d-surface */
+  --d-rule-strong: #363b4d;
 
-  --d-ink: #faf9f5; /* 17.50:1 on --d-ground */
-  --d-ink-muted: #b5b2a8; /* 8.69:1 */
-  --d-ink-faint: #8e8b81; /* 5.41:1 — carries every eyebrow and readout */
+  --d-ink: #eff0f3; /* 17.04:1 on --d-ground */
+  --d-ink-muted: #a9adb9; /* 8.66:1 */
+  --d-ink-faint: #818798; /* 5.41:1 — carries every eyebrow and readout */
 
-  /* The two poles on the dark set, weight-matched to 0.08 so neither shouts:
-     5.90 and 5.98 on --d-ground. */
-  --d-accent: #d97757; /* Claude clay — 5.90:1 on --d-ground, 5.51 on --d-surface */
-  --d-accent-hover: #e2886a;
-  --d-accent-fill: #d97757;
-  --d-accent-fill-hover: #e2886a;
-  --d-accent-ink: #1f1e1d; /* 5.33:1 on a clay fill */
-  --d-accent-soft: rgb(217 119 87 / 0.12);
-  --d-accent-line: rgb(217 119 87 / 0.34);
-  --d-accent-wash: #1e1715;
+  /* The two poles on the dark set, weight-matched to 0.03 so neither shouts:
+     6.46 and 6.49 on --d-ground. */
+  --d-accent: #9088f2; /* 6.46:1 on --d-ground, 5.96 on --d-surface */
+  --d-accent-hover: #a7a1f6;
+  --d-accent-fill: #9088f2;
+  --d-accent-fill-hover: #a7a1f6;
+  --d-accent-ink: #0c0d11; /* 6.46:1 on the fill */
+  --d-accent-soft: rgb(144 136 242 / 0.12);
+  --d-accent-line: rgb(144 136 242 / 0.34);
+  --d-accent-wash: #16172a;
 
-  --d-legacy: #82969f; /* 5.98:1 on --d-ground, 5.58 on --d-surface */
-  --d-legacy-soft: rgb(130 150 159 / 0.12);
-  --d-legacy-line: rgb(130 150 159 / 0.34);
-  --d-legacy-wash: #16191a;
+  --d-legacy: #a99179; /* 6.49:1 on --d-ground, 5.98 on --d-surface */
+  --d-legacy-soft: rgb(169 145 121 / 0.12);
+  --d-legacy-line: rgb(169 145 121 / 0.34);
+  --d-legacy-wash: #1a1814;
 
-  --d-positive: #7da882;
-  --d-positive-soft: rgb(125 168 130 / 0.12);
-  --d-positive-line: rgb(125 168 130 / 0.3);
-  --d-warn: #d9a84a;
-  --d-warn-soft: rgb(217 168 74 / 0.12);
-  --d-warn-line: rgb(217 168 74 / 0.3);
+  --d-positive: #50a57a;
+  --d-positive-soft: rgb(80 165 122 / 0.12);
+  --d-positive-line: rgb(80 165 122 / 0.3);
+  --d-warn: #ba8e27;
+  --d-warn-soft: rgb(186 142 39 / 0.12);
+  --d-warn-line: rgb(186 142 39 / 0.3);
 
   /* -------------------------------------------------------------------------
      Syntax.
@@ -180,13 +256,16 @@
      they used to be duplicate values and silently survived a re-theme. An
      element name is the thing being transformed into, so it takes the target
      pole; punctuation is structure rather than content, so it takes the source
-     pole, which is already the site's "this is scaffolding" grey. The two in
-     between come from Anthropic's secondaries and exist to keep attribute names
-     and literals apart from each other.
+     pole, which is already the site's "this is scaffolding" color.
+
+     `attr` moved from a dusty blue to cyan when the target pole became indigo:
+     a blue attribute name next to a periwinkle element name was two blues, not
+     two classes. The four hues are now periwinkle, cyan, green and warm stone,
+     which separate at a glance and not only on a ratio.
      ------------------------------------------------------------------------- */
   --d-syntax-tag: var(--d-accent);
-  --d-syntax-attr: #6a9bcc; /* Anthropic dusty blue */
-  --d-syntax-value: #8fa871; /* Anthropic sage, lifted for the panel ground */
+  --d-syntax-attr: #3bbdd1; /* 8.00:1 on --d-surface */
+  --d-syntax-value: #81bd5e; /* 7.99:1 */
   --d-syntax-punct: var(--d-legacy);
 }
 
@@ -207,22 +286,16 @@
   --ground: var(--d-ground);
   --surface: var(--d-surface);
   --surface-2: var(--d-surface-2);
-  /* A near-black band's own "inverse" is the light set, so a lifted element can
-     still invert against it — this is what the light-on-dark primary button
-     uses. */
-  --inverse: var(--d-ink);
-  --inverse-lifted: var(--d-surface-2);
 
   --rule: var(--d-rule);
   --rule-strong: var(--d-rule-strong);
-  --rule-inverse: var(--rule-strong);
 
   --ink: var(--d-ink);
   --ink-muted: var(--d-ink-muted);
   --ink-faint: var(--d-ink-faint);
-  --ink-inverse: #1f1e1d;
-  --ink-inverse-muted: #5a584f;
-  --ink-inverse-faint: #6b6960;
+  --ink-inverse: #171920;
+  --ink-inverse-muted: #51576b;
+  --ink-inverse-faint: #646b82;
 
   --accent: var(--d-accent);
   --accent-hover: var(--d-accent-hover);
@@ -245,23 +318,55 @@
   --warn-soft: var(--d-warn-soft);
   --warn-line: var(--d-warn-line);
 
-  /* The light accent measures ~1.5:1 on slate and is invisible there. */
+  /* Glass inverts with the band: a frosted panel on a dark aura is the dark
+     step, and its hairline of light goes on top rather than being a shadow. */
+  --glass: var(--glass-dark);
+  --glass-strong: var(--glass-dark);
+  --glass-edge: var(--glass-dark-rule);
+  --glass-rule: var(--glass-dark-rule);
+  --glass-solid: var(--glass-dark-solid);
+  --glass-strong-solid: var(--glass-dark-solid);
+  --aura-floor: var(--aura-cta-floor);
+
+  /* The light accent measures ~1.5:1 on near-black and is invisible there. */
   --focus: var(--d-accent);
 
   background-color: var(--d-ground);
   color: var(--d-ink);
 }
 
+/* The scoping block above paints its own background and is unlayered, so it
+   outranks anything in `@layer components` at equal specificity. A glass panel
+   that IS the dark band — the closing CTA, the hero's code card — has to win
+   that, so it is restated here rather than relying on source order. */
+[data-tone="inverse"].glass,
+[data-tone="inverse"].glass-strong {
+  background-color: var(--glass-dark);
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  [data-tone="inverse"].glass,
+  [data-tone="inverse"].glass-strong {
+    background-color: var(--glass-dark-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-tone="inverse"].glass,
+  [data-tone="inverse"].glass-strong {
+    background-color: var(--glass-dark-solid);
+  }
+}
+
 @theme inline {
   --color-ground: var(--ground);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
-  --color-inverse: var(--inverse);
-  --color-inverse-lifted: var(--inverse-lifted);
 
   --color-rule: var(--rule);
   --color-rule-strong: var(--rule-strong);
-  --color-rule-inverse: var(--rule-inverse);
 
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
@@ -291,12 +396,12 @@
   --color-warn-soft: var(--warn-soft);
   --color-warn-line: var(--warn-line);
 
-  --color-tint-clay: var(--tint-clay);
-  --color-tint-clay-ink: var(--tint-clay-ink);
-  --color-tint-clay-wash: var(--tint-clay-wash);
-  --color-tint-blue: var(--tint-blue);
-  --color-tint-blue-ink: var(--tint-blue-ink);
-  --color-tint-blue-wash: var(--tint-blue-wash);
+  --color-tint-rose: var(--tint-rose);
+  --color-tint-rose-ink: var(--tint-rose-ink);
+  --color-tint-rose-wash: var(--tint-rose-wash);
+  --color-tint-teal: var(--tint-teal);
+  --color-tint-teal-ink: var(--tint-teal-ink);
+  --color-tint-teal-wash: var(--tint-teal-wash);
   --color-tint-sage: var(--tint-sage);
   --color-tint-sage-ink: var(--tint-sage-ink);
   --color-tint-sage-wash: var(--tint-sage-wash);
@@ -317,17 +422,21 @@
   /* Apple's own typefaces, via the system stack. They are not licensed for
      webfont use, so this is the only way to get them — and it means the site
      downloads no fonts at all. On Apple hardware this resolves to SF Pro
-     Display and SF Pro Text; on Windows to Segoe UI, on Android to Roboto,
-     both of which are more generic. That tradeoff is inherent to the brief. */
-  --font-display:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui,
-    sans-serif;
+     Display, SF Pro Text and New York; on Windows to Segoe UI and Georgia, on
+     Android to Roboto and a generic serif, all of which are more generic. That
+     tradeoff is inherent to the brief. */
+  --font-display: ui-serif, "New York", Georgia, "Times New Roman", serif;
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
     sans-serif;
-  --font-serif: ui-serif, "New York", Georgia, serif;
   --font-mono:
     ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* The floating nav island's height, plus the gap it floats in. Three places
+     used to encode this independently — the bar, `scroll-padding-top`, and the
+     mobile sheet's offset — and they had already drifted to 4rem vs 6rem. */
+  --header-h: 3.5rem;
+  --header-gap: 0.75rem;
 
   /* Radius. Four steps. 2px still belongs to controls and marks, where it
      matches the focus ring; 12 and 16 belong to cards and the large panels.
@@ -335,12 +444,6 @@
      `rounded-2xl`-on-everything, but it took that far enough that every card
      read as a table cell. A step states what a thing is; sharp is not always
      the answer. */
-  /* The floating nav island's height, plus the gap it floats in. Three places
-     used to encode this independently — the bar, `scroll-padding-top`, and the
-     mobile sheet's offset — and they had already drifted to 4rem vs 6rem. */
-  --header-h: 3.5rem;
-  --header-gap: 0.75rem;
-
   --radius-sm: 4px;
   --radius-md: 10px;
   --radius-lg: 16px;
@@ -349,46 +452,47 @@
   /* Elevation. `menu` is the header dropdown, the one thing that genuinely
      floats. `card` and `panel` lift a surface off the ground by a believable
      amount — both near-neutral and low-opacity, because a colored or heavy
-     shadow is the tell. `key` is how a dark surface gets dimension without a
-     glow: one hairline of light along its top edge. */
-  --shadow-menu: 0 12px 32px -12px rgb(31 30 29 / 0.18);
-  /* A soft ambient lift for tinted cells. Warmer and wider than --shadow-card,
-     because a card sitting on a colored wash needs the shadow to carry some of
-     the same warmth or it reads as a cut-out. */
+     shadow is the tell. `glass` is wider and softer than either, because a
+     frosted panel reads as closer to the viewer than a card does. */
+  --shadow-menu: 0 12px 32px -12px rgb(23 25 32 / 0.18);
+  /* A soft ambient lift for tinted cells. Wider than --shadow-card, because a
+     card sitting on a colored wash needs more diffusion or it reads as a
+     cut-out. */
   --shadow-tint:
-    0 1px 2px rgb(31 30 29 / 0.03), 0 8px 24px -8px rgb(31 30 29 / 0.08);
+    0 1px 2px rgb(23 25 32 / 0.03), 0 8px 24px -8px rgb(23 25 32 / 0.08);
   --shadow-card:
-    0 1px 2px rgb(15 20 25 / 0.04), 0 4px 12px -4px rgb(15 20 25 / 0.07);
+    0 1px 2px rgb(23 25 32 / 0.04), 0 4px 12px -4px rgb(23 25 32 / 0.07);
   --shadow-panel:
-    0 2px 4px rgb(15 20 25 / 0.04), 0 18px 44px -12px rgb(15 20 25 / 0.13);
-  --shadow-key: inset 0 1px 0 rgb(255 255 255 / 0.045);
+    0 2px 4px rgb(23 25 32 / 0.04), 0 18px 44px -12px rgb(23 25 32 / 0.13);
+  --shadow-glass:
+    0 1px 2px rgb(23 25 32 / 0.04), 0 16px 40px -12px rgb(23 25 32 / 0.14);
 
   /* Vertical rhythm. Three band densities so a section's height states its
      editorial weight — a strip is not a primary argument. These interpolate,
      which replaces the `py-16 sm:py-24` step the whole site used to share. */
   --spacing-band-tight: clamp(2.5rem, 2rem + 1.6vw, 3.5rem);
-  --spacing-band: clamp(4rem, 3.1rem + 2.9vw, 6rem);
-  --spacing-band-loose: clamp(5.5rem, 4rem + 4.8vw, 9rem);
+  --spacing-band: clamp(4.5rem, 3.4rem + 3.4vw, 7rem);
+  --spacing-band-loose: clamp(6rem, 4.2rem + 5.8vw, 11rem);
 
   /* Fluid type scale. Display sizes interpolate on viewport width so headings
      never overflow on small screens — the exact failure mode of the old site.
      The range between display and h3 is deliberately wide: hierarchy comes
-     from size, so headings can all stay at a single serif weight. */
+     from size, so headings can all stay at a single weight. */
   --text-display: clamp(2.5rem, 1.6rem + 3.3vw, 4.5rem);
   --text-display--line-height: 1.06;
-  --text-display--letter-spacing: -0.03em;
+  --text-display--letter-spacing: -0.02em;
 
   --text-h1: clamp(2rem, 1.45rem + 2.6vw, 3.5rem);
   --text-h1--line-height: 1.08;
-  --text-h1--letter-spacing: -0.025em;
+  --text-h1--letter-spacing: -0.018em;
 
   --text-h2: clamp(1.5rem, 1.25rem + 1.3vw, 2.25rem);
   --text-h2--line-height: 1.16;
-  --text-h2--letter-spacing: -0.018em;
+  --text-h2--letter-spacing: -0.012em;
 
   --text-h3: clamp(1.1875rem, 1.09rem + 0.55vw, 1.4375rem);
   --text-h3--line-height: 1.3;
-  --text-h3--letter-spacing: -0.012em;
+  --text-h3--letter-spacing: -0.008em;
 
   --text-lead: clamp(1.0625rem, 1rem + 0.42vw, 1.25rem);
   --text-lead--line-height: 1.58;
@@ -409,7 +513,7 @@
      `scale="display"`. It is still a measured count, never a headline figure. */
   --text-numeral: clamp(2.25rem, 1.5rem + 3vw, 4rem);
   --text-numeral--line-height: 0.95;
-  --text-numeral--letter-spacing: -0.03em;
+  --text-numeral--letter-spacing: -0.02em;
 
   /* The Evidence band's figure value. Sourced, so it is allowed to be large —
      but it sits inside a card whose interior is ~230px on the narrowest phone,
@@ -417,7 +521,7 @@
      its own cell. Fluid for the same reason every other display size here is. */
   --text-figure: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
   --text-figure--line-height: 1;
-  --text-figure--letter-spacing: -0.02em;
+  --text-figure--letter-spacing: -0.015em;
 
   /* How far an anchored heading has to clear the floating nav island. The
      fourth place this arithmetic was written out: the bar, the mobile sheet,
@@ -476,10 +580,11 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    /* Apple's marketing-headline setting: semibold and tightly tracked. The
-       previous serif ran at a single 500 because its optical-size axis carried
-       the range; SF has no such axis, so weight does the work instead. */
-    font-weight: 600;
+    /* New York carries an optical-size axis, so size does the work that weight
+       had to do under SF. The previous setting was 600 with -0.03em tracking
+       precisely because SF has no such axis and weight was the only range
+       available; both numbers move back now that the axis is there. */
+    font-weight: 500;
     color: var(--ink);
     text-wrap: balance;
   }
@@ -539,79 +644,208 @@
     opacity: 1;
   }
 
-  /* A single hairline of warm light, used on the closing CTA panel's top edge. */
-  .fill-accent-gradient {
-    background-image: linear-gradient(
-      to right,
-      transparent,
-      var(--accent-fill) 35%,
-      var(--accent-fill) 65%,
-      transparent
-    );
+  /* ------------------------------------------------------------------------
+     Glass.
+
+     One class, two weights. `.glass` is the 58% step and `.glass-strong` the
+     82% one; the only functional difference between them is that the strong
+     step can carry `--ink-faint` and the plain one cannot — see the token
+     block. Both re-theme on a dark band through the scoping block above, so a
+     frosted panel on the closing CTA needs no variant of its own.
+
+     The two guards below are not progressive enhancement. 58% white over a
+     saturated aura with no blur behind it is not merely plainer, it is
+     unreadable, so both fall back to the opaque composite the contrast script
+     measures rather than to the translucent value.
+     ------------------------------------------------------------------------ */
+  .glass,
+  .glass-strong {
+    border: 1px solid var(--glass-rule);
+    box-shadow:
+      inset 0 1px 0 var(--glass-edge),
+      var(--shadow-glass);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  }
+
+  .glass {
+    background-color: var(--glass);
+  }
+
+  .glass-strong {
+    background-color: var(--glass-strong);
+  }
+
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    .glass {
+      background-color: var(--glass-solid);
+    }
+    .glass-strong {
+      background-color: var(--glass-strong-solid);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-strong {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .glass {
+      background-color: var(--glass-solid);
+    }
+    .glass-strong {
+      background-color: var(--glass-strong-solid);
+    }
+  }
+
+  /* A pill — the eyebrow badge and the nav island. Same glass, less blur,
+     because a 20px radius of blur under a 28px-tall control samples most of
+     the page behind it and goes muddy. */
+  .glass-raised {
+    box-shadow:
+      inset 0 1px 0 var(--glass-edge),
+      var(--shadow-panel);
+  }
+
+  .glass-pill {
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(140%);
   }
 
   /* ------------------------------------------------------------------------
-     Gradient surfaces.
+     Auras.
 
-     The page had exactly two gradients and both were one pixel tall. These are
-     the real thing: large, multi-stop, and used as a panel's whole background.
+     Two, and only two: behind the hero and behind the closing CTA. These are
+     what the glass above is glass against — a frosted panel over flat white is
+     a grey box, so the aura is not decoration added to the glass, it is the
+     half of it that makes the other half legible.
 
-     They never sit behind text that has to be read — a gradient cannot be
-     contrast-checked against a moving target, so copy goes on a flat surface
-     and the gradient carries the area around it.
+     They never sit behind text that has to be read. A gradient cannot be
+     contrast-checked against a moving target, so copy goes on glass or on a
+     flat surface and the aura carries the area around it. `--aura-floor` is
+     the darkest point each one reaches, with every stop overlapping at once,
+     and that is the value the glass composites are derived from.
      ------------------------------------------------------------------------ */
-  .mesh-warm {
-    background-color: var(--tint-clay-wash);
+  .aura-hero {
+    background-color: #eef0fd;
     background-image:
       radial-gradient(
-        ellipse 80% 70% at 15% 20%,
-        rgb(204 120 92 / 0.72) 0%,
-        transparent 60%
+        ellipse 62% 58% at 12% 16%,
+        rgb(79 70 229 / 0.46) 0%,
+        transparent 70%
       ),
       radial-gradient(
-        ellipse 70% 60% at 85% 15%,
-        rgb(217 168 74 / 0.6) 0%,
-        transparent 62%
+        ellipse 56% 52% at 90% 10%,
+        rgb(6 182 212 / 0.44) 0%,
+        transparent 70%
       ),
       radial-gradient(
-        ellipse 90% 80% at 60% 95%,
-        rgb(139 123 184 / 0.55) 0%,
-        transparent 65%
+        ellipse 68% 62% at 66% 100%,
+        rgb(168 85 247 / 0.39) 0%,
+        transparent 72%
       );
   }
 
-  .mesh-cool {
-    background-color: var(--tint-blue-wash);
+  /* The closing panel, on the dark set. Deeper and more saturated than the
+     hero because it sits on near-black rather than on paper. */
+  .aura-cta {
+    background-color: #0d0f1f;
     background-image:
       radial-gradient(
-        ellipse 75% 70% at 20% 15%,
-        rgb(106 155 204 / 0.72) 0%,
+        ellipse 75% 120% at 10% 0%,
+        rgb(67 56 202 / 0.46) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 60% 100% at 96% 108%,
+        rgb(124 58 237 / 0.3) 0%,
         transparent 62%
       ),
       radial-gradient(
-        ellipse 80% 70% at 85% 80%,
-        rgb(139 123 184 / 0.32) 0%,
+        ellipse 70% 90% at 70% 20%,
+        rgb(8 145 178 / 0.26) 0%,
         transparent 64%
-      ),
-      radial-gradient(
-        ellipse 70% 60% at 55% 50%,
-        rgb(120 140 93 / 0.45) 0%,
-        transparent 60%
       );
   }
 
-  /* The closing panel. Clay into a deeper terracotta, on the dark surface. */
-  .mesh-cta {
+  /* ------------------------------------------------------------------------
+     Diagrams.
+
+     The site had no SVG at all before these — not one `<path>` in 23 component
+     files — so this is the shared contract rather than a style.
+
+     Strokes and fills resolve from `currentColor` or a token the caller sets,
+     never a hex (non-negotiable #5), which is also what lets one diagram sit on
+     a tinted card, a dark band or a glass panel without a variant.
+     ------------------------------------------------------------------------ */
+  .diagram {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* No `vector-effect: non-scaling-stroke` here, and that is deliberate: it
+     stops `pathLength` from normalising `stroke-dasharray`, which is exactly
+     what the draw-on animation depends on. A stroke that scales with the
+     drawing is also the right behaviour — these are diagrams, not icons. */
+
+  /* ------------------------------------------------------------------------
+     Gradient headline.
+
+     The one place a gradient touches type, against the rule that a gradient
+     never sits behind text — so it is constrained rather than excepted. Both
+     endpoints are tokens that independently clear 4.5:1 on the band, and
+     `pnpm contrast` samples the ramp between them and asserts the minimum, so
+     this is measured rather than asserted.
+
+     The fallback is not cosmetic. `-webkit-text-fill-color: transparent` with
+     no `background-clip` support renders nothing at all, so the transparent
+     fill is only ever applied inside the @supports that proves it works.
+     ------------------------------------------------------------------------ */
+  .text-gradient {
+    color: var(--accent);
+  }
+
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    .text-gradient {
+      background-image: linear-gradient(
+        100deg,
+        var(--accent) 0%,
+        var(--grad-end) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  /* The quote band's aura. Same stops and alphas as .aura-cta, deliberately —
+     the dark glass that floats on it is measured against a single worst pixel
+     shared by both dark auras, so giving this one its own colour ramp would
+     mean a second worst case and a second set of solid companions. Only the
+     geometry differs. */
+  .aura-quote {
+    background-color: #0d0f1f;
     background-image:
       radial-gradient(
-        ellipse 70% 120% at 12% 0%,
-        rgb(204 120 92 / 0.62) 0%,
-        transparent 58%
+        ellipse 55% 130% at 82% 8%,
+        rgb(67 56 202 / 0.46) 0%,
+        transparent 60%
       ),
       radial-gradient(
-        ellipse 60% 100% at 95% 110%,
-        rgb(139 123 184 / 0.32) 0%,
-        transparent 60%
+        ellipse 50% 120% at 12% 96%,
+        rgb(124 58 237 / 0.3) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        ellipse 60% 100% at 40% 30%,
+        rgb(8 145 178 / 0.26) 0%,
+        transparent 64%
       );
   }
 
@@ -626,25 +860,7 @@
     border-radius: var(--radius-md);
     background-color: var(--chip-wash, var(--surface-2));
     color: var(--chip-ink, var(--ink));
-    box-shadow: inset 0 0 0 1px rgb(31 30 29 / 0.06);
-  }
-
-  /* A light source for the hero, not a backdrop graphic.
-
-     The reference sites put a faint ruled grid here. This does not: non-
-     negotiable #6 names that exact element — a 4rem hairline grid encoding
-     nothing — as the one piece of ornament the previous hero carried, and it
-     was removed on purpose. A grid implies measurement it cannot back up.
-
-     What this does instead is light the panel. The code specimen is the subject
-     of the band and has to read as lifted off the page; a soft falloff behind
-     it does that job the way a shadow does, and claims nothing. */
-  .hero-light {
-    background-image: radial-gradient(
-      ellipse 70% 55% at 50% 42%,
-      var(--accent-soft) 0%,
-      transparent 70%
-    );
+    box-shadow: inset 0 0 0 1px rgb(23 25 32 / 0.06);
   }
 
   /* Long-form MDX body copy. */
@@ -678,6 +894,11 @@
 
      Both colors resolve through the scoped tokens, so this works unchanged on
      a dark band.
+
+     Lattice cells stay opaque. They are flat cells inside a ruled grid, which
+     is the opposite of a panel floating over something — there is nothing
+     behind them for glass to be glass against, and the hairlines are the
+     structure. Do not glass these.
      ------------------------------------------------------------------------ */
   .lattice {
     display: grid;
@@ -698,6 +919,11 @@
    content on scroll. Every word is in the server-rendered HTML and visible on
    arrival. These animate marks — hairlines, ticks, a bus line — never text, and
    they run on load rather than on intersection.
+
+   This survives the move to Auraform's surfaces unchanged, and deliberately so:
+   Auraform's own hero renders blank until its appear effects fire, which is
+   precisely the defect this site exists to not have. The surfaces are worth
+   borrowing; the scroll behavior is the bug.
 
    Marks animate on `transform` and finish at their resting state, so the worst
    case under a failed or instant animation is the mark simply being there. The
@@ -729,6 +955,41 @@
   }
 }
 
+/* A diagram drawing itself. Every stroke that uses this carries
+   `pathLength="1"`, so the dash length is normalised and no JavaScript has to
+   measure the path. It runs on load and ends at the finished drawing, so a
+   failed or instant animation just means the diagram is simply there. */
+@keyframes draw-on {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* A node or disposition mark arriving. Transform only, and it finishes at its
+   resting state — same contract as tick-rise. */
+@keyframes mark-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* The platform strip. Translates one of two identical halves by exactly -50%,
+   which is what makes the loop seamless. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* The read/write head passing over a line of the specimen. It fades a tint in
    and out behind text that is already painted; the text itself never moves and
    never changes opacity. */
@@ -757,12 +1018,30 @@
     animation: line-scan 6s linear infinite;
   }
 
+  .animate-draw {
+    stroke-dasharray: 1;
+    animation: draw-on 760ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  }
+
+  .animate-mark-in {
+    animation: mark-in 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .animate-marquee {
+    animation: marquee 44s linear infinite;
+  }
+
   /* Switched off outright rather than left to the global guard: an infinite
      animation forced to a single 0.01ms iteration parks at whatever frame it
-     lands on, which for the scan line is a tint stuck over one row. */
+     lands on, which for the scan line is a tint stuck over one row and for the
+     marquee is a strip frozen halfway through its translate. */
   @media (prefers-reduced-motion: reduce) {
     .animate-line-scan {
       display: none;
+    }
+    .animate-marquee {
+      animation: none;
+      transform: none;
     }
   }
 }

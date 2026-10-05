@@ -37,7 +37,7 @@ export default function ContactPage() {
                       {String(stage.step).padStart(2, "0")}
                     </span>
                     <div>
-                      <h2 className="text-lg font-semibold tracking-tight">
+                      <h2 className="font-display text-lg font-semibold">
                         {stage.name}
                       </h2>
                       <p className="text-ink-muted mt-2 text-sm leading-relaxed">

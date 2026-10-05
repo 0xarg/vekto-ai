@@ -20,7 +20,7 @@ export default function NotFound() {
           </ButtonLink>
         </div>
 
-        <div className="border-rule mt-16 grid gap-10 border-t pt-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="border-rule mt-16 grid gap-10 border-t pt-12 sm:grid-cols-2 md:grid-cols-4">
           {footerColumns.map((column) => (
             <div key={column.heading}>
               <Label className="mb-4">{column.heading}</Label>

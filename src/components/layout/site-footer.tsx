@@ -11,7 +11,7 @@ export function SiteFooter() {
   return (
     <footer className="border-rule bg-surface-2 border-t">
       <Container width="wide">
-        <div className="grid gap-12 py-16 lg:grid-cols-[1.5fr_3fr]">
+        <div className="py-band grid gap-12 md:grid-cols-[1.5fr_3fr]">
           <div className="max-w-xs">
             <Wordmark />
             <p className="text-ink-muted mt-4 text-sm leading-relaxed">
@@ -19,7 +19,7 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
             {footerColumns.map((column) => (
               <div key={column.heading}>
                 <Label className="mb-4">{column.heading}</Label>

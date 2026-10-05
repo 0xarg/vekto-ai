@@ -38,12 +38,12 @@ export default function SolutionsPage() {
           />
         ) : (
           <>
-            <div className="lattice lg:grid-cols-3">
+            <div className="lattice md:grid-cols-2 lg:grid-cols-3">
               {solutions.map(({ slug, frontmatter: fm }) => (
                 <Link
                   key={slug}
                   href={`/solutions/${slug}`}
-                  className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
+                  className="group hover:bg-surface-2 flex flex-col p-5 transition-colors sm:p-6"
                 >
                   <h2 className="group-hover:text-accent text-xl font-semibold tracking-tight transition-colors">
                     {fm.title}

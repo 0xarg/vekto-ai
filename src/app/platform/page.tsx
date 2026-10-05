@@ -71,7 +71,7 @@ export default function PlatformPage() {
         heading="What you get back"
         lede="The migration produces artifacts your team owns and can review — source code and configuration in the target platform's own formats, plus the record of how each item was handled."
       >
-        <div className="lattice sm:grid-cols-3">
+        <div className="lattice sm:grid-cols-2 lg:grid-cols-3">
           {outputs.map((item) => (
             <div key={item.title} className="p-6">
               <h3 className="text-lg font-semibold tracking-tight">

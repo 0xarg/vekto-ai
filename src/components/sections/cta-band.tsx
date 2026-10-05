@@ -28,18 +28,18 @@ export function CtaBand({
             instead of letting it bleed into the footer. */}
         <div
           data-tone="inverse"
-          className="mesh-cta shadow-panel relative overflow-hidden rounded-xl px-6 py-16 sm:px-12"
+          className="mesh-cta shadow-panel overflow-hidden rounded-xl px-5 py-12 sm:px-12 sm:py-16"
         >
-          <div className="grid gap-8 lg:grid-cols-[2fr_1fr] lg:items-end">
+          <div className="grid gap-8 md:grid-cols-[2fr_1fr] md:items-end">
             <div className="max-w-2xl">
               <h2 className="text-h2">{heading}</h2>
               <p className="text-lead text-ink-muted mt-5">{lede}</p>
             </div>
-            <div className="flex flex-col gap-3 lg:items-end">
+            <div className="flex flex-col gap-3 md:items-end">
               <ButtonLink
                 href={cta.primary.href}
                 size="lg"
-                className="w-full lg:w-auto"
+                className="w-full md:w-auto"
               >
                 {cta.primary.label}
               </ButtonLink>
@@ -47,7 +47,7 @@ export function CtaBand({
                 href={cta.secondary.href}
                 size="lg"
                 variant="secondary"
-                className="w-full lg:w-auto"
+                className="w-full md:w-auto"
               >
                 {cta.secondary.label}
               </ButtonLink>

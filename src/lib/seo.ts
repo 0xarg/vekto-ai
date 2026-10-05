@@ -2,6 +2,21 @@ import type { Metadata } from "next";
 import { site } from "./site";
 import { absoluteUrl } from "./utils";
 
+/**
+ * `--ground` from globals.css, duplicated here because it has to be.
+ *
+ * This is the one place on the site that breaks non-negotiable #5, and it
+ * breaks it because a `<meta name="theme-color">` is read by the browser
+ * before any stylesheet and cannot resolve a custom property. Without it the
+ * address bar on a phone paints its own grey above an ivory page.
+ *
+ * So the value is duplicated exactly once, in the open, and `pnpm contrast`
+ * asserts it still equals the parsed `--ground`. A silent drift here is the
+ * failure mode that block in globals.css already warns about; this makes it a
+ * loud one.
+ */
+export const GROUND_HEX = "#faf9f5";
+
 type BuildMetadataArgs = {
   title: string;
   description: string;

@@ -23,6 +23,7 @@ const twMerge = extendTailwindMerge({
             "label",
             "readout",
             "numeral",
+            "figure",
           ],
         },
       ],

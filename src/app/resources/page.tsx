@@ -45,12 +45,12 @@ export default function ResourcesPage() {
           />
         ) : (
           <>
-            <div className="lattice lg:grid-cols-2">
+            <div className="lattice 3xl:grid-cols-3 md:grid-cols-2">
               {resources.map(({ slug, frontmatter: fm }) => (
                 <Link
                   key={slug}
                   href={`/resources/${slug}`}
-                  className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
+                  className="group hover:bg-surface-2 flex flex-col p-5 transition-colors sm:p-6"
                 >
                   <Label>{categoryLabels[fm.category] ?? fm.category}</Label>
 

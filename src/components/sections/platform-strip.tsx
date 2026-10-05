@@ -52,7 +52,15 @@ export function PlatformStrip() {
               ))}
             </ul>
 
-            <span aria-hidden className="text-ink-faint shrink-0 font-mono">
+            {/* Below `sm` the two lists stack, so the separator turns to point
+                the way the layout actually reads. `self-start` because a flex
+                item stretches across the cross axis by default — as a
+                full-width block, rotating it swung the glyph out of the gap
+                entirely. */}
+            <span
+              aria-hidden
+              className="text-ink-faint shrink-0 rotate-90 self-start font-mono sm:rotate-0 sm:self-auto"
+            >
               &rarr;
             </span>
 

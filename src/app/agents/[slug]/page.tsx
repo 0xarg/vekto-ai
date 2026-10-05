@@ -112,7 +112,7 @@ export default async function AgentPage({ params }: Params) {
           each of the five pages carries a visibly different mark — which is
           also what stops them reading as near-duplicates to a crawler. */}
       <nav aria-label="Pipeline stages" className="border-rule border-b">
-        <Container width="wide" className="px-0! sm:px-0!">
+        <Container width="wide" bleed>
           <ol className="divide-rule flex divide-x">
             {agents.map((a) => {
               const current = a.step === agent.step;
@@ -122,7 +122,7 @@ export default async function AgentPage({ params }: Params) {
                     href={`/agents/${a.slug}`}
                     aria-current={current ? "page" : undefined}
                     className={cn(
-                      "text-label block px-2 py-3.5 text-center font-mono transition-colors",
+                      "text-label block px-2 py-4 text-center font-mono transition-colors sm:py-3.5",
                       current
                         ? "bg-accent text-accent-ink"
                         : "text-ink-faint hover:bg-surface hover:text-ink",
@@ -150,7 +150,7 @@ export default async function AgentPage({ params }: Params) {
           {previous ? (
             <Link
               href={`/agents/${previous.slug}`}
-              className="group hover:bg-surface-2 block p-6 transition-colors"
+              className="group hover:bg-surface-2 block p-5 transition-colors sm:p-6"
             >
               <span className="text-ink-faint text-label block font-mono">
                 <span aria-hidden>&larr;</span> Previous stage
@@ -170,7 +170,7 @@ export default async function AgentPage({ params }: Params) {
           {next ? (
             <Link
               href={`/agents/${next.slug}`}
-              className="group hover:bg-surface-2 block p-6 text-right transition-colors"
+              className="group hover:bg-surface-2 block p-5 text-right transition-colors sm:p-6"
             >
               <span className="text-ink-faint text-label block font-mono">
                 Next stage <span aria-hidden>&rarr;</span>

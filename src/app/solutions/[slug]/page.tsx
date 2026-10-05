@@ -50,14 +50,14 @@ export default async function SolutionPage({ params }: Params) {
       />
 
       <Section bordered={false} className="py-10!">
-        <div className="border-rule bg-surface max-w-2xl border p-6">
+        <div className="border-rule bg-surface max-w-2xl border p-5 sm:p-6">
           <Label className="mb-3">Best fit</Label>
           <p className="text-ink-muted leading-relaxed">{fm.bestFit}</p>
         </div>
       </Section>
 
       <Section bordered={false} className="pt-0!">
-        <Container width="prose" className="px-0! sm:px-0!">
+        <Container width="prose" bleed>
           <Mdx source={body} />
         </Container>
       </Section>

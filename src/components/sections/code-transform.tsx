@@ -51,13 +51,23 @@ function CodePane({
         </span>
       </div>
 
-      <pre className="overflow-x-auto px-4 py-4 font-mono text-[0.6875rem] leading-[1.7] sm:text-xs">
+      {/* The pane scrolls, the page does not. 12px is the floor: this is the
+          one element on the site an integration architect reads line by line,
+          and the previous 11px was below what that survives on a phone. */}
+      <pre className="overflow-x-auto px-4 py-4 font-mono text-xs leading-[1.7]">
         <code>
           {lines.map((tokens: Token[], i: number) => (
-            <span key={i} className="group/line relative block">
+            /* `w-max min-w-full` so a line is as wide as its own content.
+               Without it the line box stops at the visible width and the scan
+               stripe below — absolutely positioned against it — covered only
+               the part of the line you could already see. */
+            <span
+              key={i}
+              className="group/line relative block w-max min-w-full"
+            >
               <span
                 aria-hidden
-                className="text-ink-faint/60 inline-block shrink-0 pr-4 text-right select-none"
+                className="text-ink-faint/60 hidden shrink-0 pr-4 text-right select-none sm:inline-block"
                 style={{ width: `${gutter + 1}ch` }}
               >
                 {i + 1}

@@ -43,7 +43,7 @@ export const engagementModels: {
 
 export function EngagementModels({ withCta = false }: { withCta?: boolean }) {
   return (
-    <div className="grid gap-5 lg:grid-cols-3">
+    <div className="grid gap-5 md:grid-cols-3">
       {engagementModels.map((model, i) => (
         <Card
           key={model.name}

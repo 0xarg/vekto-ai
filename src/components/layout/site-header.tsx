@@ -10,11 +10,15 @@ import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
 import { Wordmark } from "./wordmark";
 
+const SHEET_ID = "site-menu";
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Any navigation closes everything. Adjusted during render rather than in an
@@ -57,6 +61,18 @@ export function SiteHeader() {
     };
   }, [mobileOpen]);
 
+  // The sheet covers the page, so focus has to follow it in and come back out.
+  // Without this, tabbing from an open sheet walks the page underneath it,
+  // which for a screen-reader or keyboard user means the menu never really
+  // opened.
+  useEffect(() => {
+    if (mobileOpen) {
+      sheetRef.current?.focus();
+    } else if (document.activeElement === document.body) {
+      triggerRef.current?.focus();
+    }
+  }, [mobileOpen]);
+
   // Whether the page has scrolled far enough for the island to tighten. One
   // passive listener driving one boolean — deliberately not a scroll-linked
   // animation, which would run work on every frame to save a 150ms transition.
@@ -68,11 +84,22 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // The hover-close timer outlives the component if a pointer leaves the nav
+  // as the route changes, so it gets the same cleanup as the listeners.
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
   function scheduleClose() {
     closeTimer.current = setTimeout(() => setOpenGroup(null), 120);
   }
   function cancelClose() {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
   }
 
   const isActive = (href: string) =>
@@ -82,11 +109,17 @@ export function SiteHeader() {
     /* A floating island rather than a full-width bar. It is detached from the
        top edge, so the page visibly scrolls underneath it, and it tightens once
        you are past the hero. `--header-h` and `--header-gap` in globals.css are
-       the single source for its geometry — `scroll-padding-top` and the mobile
-       sheet's offset both derive from them, because those three used to be
-       written out independently and had already drifted apart. */
+       the single source for its geometry — `scroll-padding-top`, the anchor
+       offset and the mobile sheet all derive from them, because those values
+       used to be written out independently and had already drifted apart.
+
+       The outer padding matches `Container`'s ladder exactly. It used to be
+       `px-4 sm:px-6` against the container's `px-5 sm:px-8`, so the island's
+       edge missed the column of content underneath it by 4px on a phone and
+       8px above — small, but it is the first thing on the page and it was the
+       one element not sitting on the grid. */
     <header
-      className="sticky z-50 px-4 sm:px-6"
+      className="3xl:px-16 sticky z-50 px-5 sm:px-8 lg:px-10"
       style={{ top: "var(--header-gap)" }}
     >
       <a
@@ -98,9 +131,10 @@ export function SiteHeader() {
 
       <div
         className={cn(
-          "border-rule bg-surface/85 mx-auto flex max-w-6xl items-center justify-between gap-6 rounded-full border pr-2 pl-5 backdrop-blur-xl",
+          "border-rule bg-surface/85 mx-auto flex items-center justify-between gap-4 rounded-full border pr-2 pl-5 backdrop-blur-xl lg:gap-6",
+          "3xl:max-w-7xl max-w-6xl",
           "transition-[box-shadow,max-width,height] duration-300 ease-out",
-          scrolled ? "shadow-panel max-w-5xl" : "shadow-card",
+          scrolled ? "shadow-panel 3xl:max-w-6xl md:max-w-5xl" : "shadow-card",
         )}
         style={{ height: "var(--header-h)" }}
       >
@@ -109,10 +143,19 @@ export function SiteHeader() {
             <Wordmark />
           </Link>
 
-          {/* ---------------- Desktop nav ---------------- */}
-          <div ref={navRef} className="hidden items-center gap-1 lg:flex">
-            {primaryNav.map((group) => {
+          {/* ---------------- Desktop nav ----------------
+              Opens at `md` rather than `lg`. At 820px — an iPad in portrait,
+              which is a real share of this audience — the island used to carry
+              a wordmark, a hamburger and about 600px of nothing. Four groups
+              fit there comfortably; both CTAs do not, so only the primary
+              comes along and the secondary waits for `lg`. */}
+          <div ref={navRef} className="hidden items-center gap-1 md:flex">
+            {primaryNav.map((group, i) => {
               const open = openGroup === group.label;
+              // The last group sits against the island's right edge, so a
+              // left-anchored 320px panel hangs off it at the narrow end of
+              // the desktop range. That one anchors right instead.
+              const last = i === primaryNav.length - 1;
               return (
                 <div
                   key={group.label}
@@ -129,7 +172,7 @@ export function SiteHeader() {
                     aria-haspopup="true"
                     onClick={() => setOpenGroup(open ? null : group.label)}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.9375rem] transition-colors duration-150",
+                      "flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[0.9375rem] transition-colors duration-150 lg:px-3",
                       isActive(group.href)
                         ? "text-ink"
                         : "text-ink-muted hover:text-ink",
@@ -148,7 +191,10 @@ export function SiteHeader() {
 
                   {open && (
                     <div
-                      className="border-rule bg-surface shadow-menu animate-menu-in absolute top-full left-0 mt-2 w-80 overflow-hidden rounded-xl border"
+                      className={cn(
+                        "border-rule bg-surface shadow-menu animate-menu-in absolute top-full mt-2 w-80 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-xl border",
+                        last ? "right-0" : "left-0",
+                      )}
                       onMouseEnter={cancelClose}
                       onMouseLeave={scheduleClose}
                     >
@@ -175,21 +221,45 @@ export function SiteHeader() {
             })}
           </div>
 
+          {/* Three steps, because the primary label is 26 characters and the
+              island is a fixed-height pill that nothing may spill out of.
+              `md` buys the four nav groups, which is the change that matters —
+              a tablet used to get a wordmark, a hamburger and 600px of
+              nothing. The primary CTA joins at `lg` and the secondary at `xl`,
+              each at the width where it actually fits.
+
+              `whitespace-nowrap` here and nowhere else: buttons wrap by
+              default across the site, because a full-width CTA in a card has
+              the room and clipping it is worse. This is the one surface with a
+              fixed height, so a label taking a second line grew the control
+              past the pill around it. */}
           <div className="hidden items-center gap-3 lg:flex">
-            <ButtonLink href={cta.secondary.href} variant="ghost" size="sm">
+            <ButtonLink
+              href={cta.secondary.href}
+              variant="ghost"
+              size="sm"
+              className="hidden whitespace-nowrap xl:inline-flex"
+            >
               {cta.secondary.label}
             </ButtonLink>
-            <ButtonLink href={cta.primary.href} variant="primary" size="sm">
+            <ButtonLink
+              href={cta.primary.href}
+              variant="primary"
+              size="sm"
+              className="whitespace-nowrap"
+            >
               {cta.primary.label}
             </ButtonLink>
           </div>
 
           {/* ---------------- Mobile trigger ---------------- */}
           <button
+            ref={triggerRef}
             type="button"
-            className="text-ink -mr-2 p-2 lg:hidden"
+            className="text-ink -mr-1 flex h-11 w-11 items-center justify-center md:hidden"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
+            aria-controls={SHEET_ID}
             onClick={() => setMobileOpen((v) => !v)}
           >
             {mobileOpen ? (
@@ -201,12 +271,23 @@ export function SiteHeader() {
         </>
       </div>
 
-      {/* ---------------- Mobile sheet ---------------- */}
+      {/* ---------------- Mobile sheet ----------------
+          `overscroll-contain` stops a flick past the end of the list from
+          scrolling the page underneath; the safe-area padding keeps the last
+          CTA clear of the home indicator, and depends on `viewportFit:
+          "cover"` in the root layout's viewport export. */}
       {mobileOpen && (
         <div
-          className="border-rule bg-ground fixed inset-x-0 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
+          ref={sheetRef}
+          id={SHEET_ID}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site menu"
+          tabIndex={-1}
+          className="border-rule bg-ground fixed inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-contain border-t outline-none md:hidden"
           style={{
             top: "calc(var(--header-h) + var(--header-gap) * 2)",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
           <Container>
@@ -222,7 +303,7 @@ export function SiteHeader() {
                         <Link
                           href={item.href}
                           className={cn(
-                            "-mx-2 block rounded-sm px-2 py-2.5 text-base",
+                            "-mx-2 flex min-h-11 items-center rounded-sm px-2 text-base",
                             isActive(item.href)
                               ? "text-accent"
                               : "text-ink hover:bg-surface-2",

@@ -58,10 +58,28 @@ function Ticks({
 export function PipelineStrip() {
   return (
     <div data-band data-tone="inverse" className="border-rule border-b">
-      <Container width="wide" className="px-0! sm:px-0!">
-        <ol className="divide-rule grid divide-y sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+      <Container width="wide" bleed>
+        {/* `.lattice` rather than `divide-*`. `divide-x` adds a left border by
+            DOM order, not by grid track, so in a two-column grid it put a
+            stray rule down the left edge of every second row — which is why
+            it was gated to `lg`, and why the whole 640-1023px range showed two
+            columns with no vertical rule between them at all. The lattice
+            draws every interior hairline through a 1px gap in its own
+            background and does it at any column count.
+
+            `border-0` because the outer div already draws the bottom rule and
+            the strip is full-bleed, so a perimeter border would double the
+            bottom edge and put two invisible lines at the viewport edges.
+
+            The last cell spans the remainder of its row. Five items in a two-
+            or three-column grid leave an empty cell, and an empty cell in a
+            lattice is not blank — it is a solid block of the rule colour. */}
+        <ol className="lattice border-0 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {agents.map((agent, index) => (
-            <li key={agent.slug}>
+            <li
+              key={agent.slug}
+              className="sm:last:col-span-2 lg:last:col-span-1"
+            >
               <Link
                 href={`/agents/${agent.slug}`}
                 className="hover:bg-surface group flex h-full flex-col p-6 transition-colors"

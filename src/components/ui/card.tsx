@@ -84,7 +84,10 @@ export function Card({
   const inner = (
     <>
       {graphic}
-      <div className={cn("flex flex-1 flex-col p-6", graphic && "pt-5")}>
+      {/* p-5 below `sm`: at 320px a full-width card is 280px across, and 24px
+          of padding each side left a 232px interior for a heading, a
+          paragraph and sometimes a two-column list. */}
+      <div className={cn("flex flex-1 flex-col p-5 sm:p-6", graphic && "pt-5")}>
         {icon && <span className="chip mb-5">{icon}</span>}
         {children}
       </div>

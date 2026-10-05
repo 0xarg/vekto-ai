@@ -107,7 +107,7 @@ export default async function CaseStudyPage({ params }: Params) {
               <dt className="text-label text-ink-faint font-mono uppercase">
                 {r.label}
               </dt>
-              <dd className="text-ink mt-3 text-3xl font-semibold tracking-tight tabular-nums">
+              <dd className="text-ink text-h2 mt-3 font-semibold tracking-tight tabular-nums">
                 {r.value}
               </dd>
               {/* Every figure carries its source. The scope forbids
@@ -121,7 +121,7 @@ export default async function CaseStudyPage({ params }: Params) {
       </Section>
 
       <Section bordered={false}>
-        <Container width="prose" className="px-0! sm:px-0!">
+        <Container width="prose" bleed>
           <Mdx source={body} />
         </Container>
       </Section>

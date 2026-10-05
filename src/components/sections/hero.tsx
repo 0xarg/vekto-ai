@@ -57,7 +57,7 @@ export function Hero({
     <section data-band data-tone="ground" className="relative">
       <Container width="wide">
         <div className="py-band-loose">
-          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
+          <div className="3xl:gap-24 grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
             <div className="max-w-xl min-w-0">
               {eyebrow && pair && (
                 <Link
@@ -95,7 +95,7 @@ export function Hero({
               )}
 
               {spec && (
-                <ul className="border-rule mt-10 flex flex-wrap items-baseline gap-x-10 gap-y-4 border-t pt-5">
+                <ul className="border-rule mt-10 flex flex-wrap items-baseline gap-x-8 gap-y-4 border-t pt-5 sm:gap-x-10">
                   {heroSpec.map((item) => (
                     <li key={item.label}>
                       <Readout value={item.value} label={item.label} />
@@ -108,7 +108,7 @@ export function Hero({
             {/* The gradient does the visual work; the card is the proof sitting
                 on it. */}
             {specimen && (
-              <div className="mesh-warm border-rule relative flex min-h-[20rem] min-w-0 items-center justify-center rounded-xl border p-5 sm:min-h-[22rem] sm:p-12">
+              <div className="mesh-warm border-rule relative flex min-h-[16rem] min-w-0 items-center justify-center rounded-xl border p-5 sm:min-h-[22rem] sm:p-12">
                 <CodeCard />
               </div>
             )}

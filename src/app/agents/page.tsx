@@ -28,7 +28,7 @@ export default function AgentsPage() {
             <li key={agent.slug}>
               <Link
                 href={`/agents/${agent.slug}`}
-                className="hover:bg-surface-2 group grid gap-6 py-10 transition-colors md:grid-cols-[auto_1fr_auto] md:items-start md:gap-10"
+                className="hover:bg-surface-2 group grid gap-6 py-10 transition-colors md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-start md:gap-10"
               >
                 <div className="text-ink-faint group-hover:text-accent font-mono text-sm transition-colors md:w-16">
                   {String(agent.step).padStart(2, "0")}

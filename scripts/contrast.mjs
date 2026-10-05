@@ -288,6 +288,29 @@ console.log(
   `Source pole vs --ink-faint:            ${poleVsFaint.toFixed(2)}:1 - hue-separated, confirm visually`,
 );
 
+/**
+ * The theme-color meta tag is the one place a token has to exist as a literal
+ * hex in TypeScript: the browser reads it before any stylesheet, so it cannot
+ * resolve `var(--ground)`. Duplicated values that silently survive a re-theme
+ * are exactly what the indirection note above is about, so rather than trust
+ * the comment next to it, check it.
+ */
+const groundHex = readFileSync(join(root, "src/lib/seo.ts"), "utf8").match(
+  /GROUND_HEX\s*=\s*"(#[0-9a-fA-F]{3,8})"/,
+);
+if (!groundHex) {
+  console.log(`\nGROUND_HEX not found in src/lib/seo.ts`);
+  failures++;
+} else {
+  const matches = groundHex[1].toLowerCase() === t["ground"].toLowerCase();
+  console.log(
+    `GROUND_HEX vs --ground:                ${groundHex[1]} ${
+      matches ? "ok" : `FAIL - --ground is ${t["ground"]}`
+    }`,
+  );
+  if (!matches) failures++;
+}
+
 console.log(
   `\n${failures} below floor${missing ? `, ${missing} token(s) not found` : ""}\n`,
 );

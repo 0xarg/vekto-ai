@@ -159,7 +159,7 @@ export default function HomePage() {
         heading="Legacy integration estates are large, undocumented and load-bearing."
         lede="The people who built them have moved on. The documentation describes an earlier version. Nothing can be switched off, because nobody is certain what depends on what."
       >
-        <div className="grid gap-5 sm:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {problems.map((item) => (
             <Card key={item.title} tint={item.tint} icon={item.icon} washed>
               <h3 className="text-lg font-semibold tracking-tight">
@@ -182,7 +182,7 @@ export default function HomePage() {
         heading="Five agents, in sequence, over your real estate."
         lede="Each stage reads what the one before it produced. Nothing is changed until Transformation, and nothing is declared finished until Validation has compared it against the original."
       >
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent, i) => {
             const style = stageStyle[i];
             const wide = i < 2;
@@ -192,7 +192,7 @@ export default function HomePage() {
                 href={`/agents/${agent.slug}`}
                 tint={style.tint}
                 icon={style.icon}
-                className={wide ? "lg:col-span-3" : ""}
+                className={wide ? "md:col-span-2 lg:col-span-3" : ""}
                 graphic={<StageGraphic agent={agent} wide={wide} />}
               >
                 <div className="flex items-baseline gap-3">

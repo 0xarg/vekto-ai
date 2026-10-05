@@ -23,7 +23,7 @@ export function PullQuote() {
     <section data-band data-tone="inverse" className="py-band-loose">
       <Container width="default">
         <figure>
-          <blockquote className="text-ink text-2xl leading-snug font-medium tracking-tight text-balance sm:text-[2rem]">
+          <blockquote className="text-ink max-w-4xl text-2xl leading-snug font-medium tracking-tight text-balance sm:text-[2rem]">
             &ldquo;{quote.text}&rdquo;
           </blockquote>
           <figcaption className="border-rule text-ink-muted mt-8 border-t pt-5 text-sm">

@@ -37,7 +37,7 @@ export default function CaseStudiesPage() {
           />
         ) : (
           <>
-            <div className="lattice lg:grid-cols-2">
+            <div className="lattice 3xl:grid-cols-3 md:grid-cols-2">
               {studies.map(({ slug, frontmatter: fm }) => {
                 const source = getPlatform(fm.sourcePlatform);
                 const target = getPlatform(fm.targetPlatform);
@@ -46,7 +46,7 @@ export default function CaseStudiesPage() {
                   <Link
                     key={slug}
                     href={`/case-studies/${slug}`}
-                    className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
+                    className="group hover:bg-surface-2 flex flex-col p-5 transition-colors sm:p-6"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-legacy bg-legacy-soft border-legacy-line rounded-sm border px-2.5 py-1 font-mono text-xs">
@@ -69,7 +69,7 @@ export default function CaseStudiesPage() {
 
                     {/* Estate size and duration are what a buyer scans for to
                         decide whether this resembles their own situation. */}
-                    <dl className="border-rule mt-5 grid grid-cols-2 gap-5 border-t pt-4">
+                    <dl className="border-rule mt-5 grid gap-5 border-t pt-4 sm:grid-cols-2">
                       <div>
                         <Label className="mb-2">Estate size</Label>
                         <dd className="text-ink text-sm">{fm.estateSize}</dd>

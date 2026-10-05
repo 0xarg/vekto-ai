@@ -19,9 +19,17 @@ import { cn } from "@/lib/utils";
  *
  * `secondary` stays a flat bordered surface, which is what keeps the clay
  * meaning "this is the one action on the band".
+ *
+ * Labels wrap, and the sizes are `min-h-*` rather than fixed heights. The base
+ * carried `whitespace-nowrap` for a while, which is harmless until a caller
+ * sets `w-full` — `CtaBand` and `EngagementModels` both do — and the label is
+ * the 26-character "Get a Migration Assessment". At 320px that label was wider
+ * than the panel holding it, and since `Card` is `overflow-hidden` it was
+ * clipped rather than merely overflowing. A minimum height means a second line
+ * grows the control instead of spilling out of a fixed box.
  */
 const button = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-lg text-center font-medium transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -34,19 +42,19 @@ const button = cva(
         link: "text-accent underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-9 px-3.5 text-sm",
-        md: "h-11 px-5 text-[0.9375rem]",
-        lg: "h-12 px-6 text-base",
+        sm: "min-h-9 px-3.5 py-2 text-sm",
+        md: "min-h-11 px-5 py-2.5 text-[0.9375rem]",
+        lg: "min-h-12 px-6 py-3 text-base",
       },
     },
     compoundVariants: [
       /* `link` is text, not a control: it takes no button box. This has to sit
          in compoundVariants so it resolves after the `size` classes — as a
-         plain variant its `h-auto` lost to `h-9`/`h-11`/`h-12` and the link
+         plain variant its reset lost to the `min-h-*` steps and the link
          silently rendered at button height. */
       {
         variant: "link",
-        class: "h-auto rounded-sm p-0 shadow-none active:scale-100",
+        class: "min-h-0 rounded-sm p-0 shadow-none active:scale-100",
       },
     ],
     defaultVariants: { variant: "primary", size: "md" },

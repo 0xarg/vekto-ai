@@ -55,7 +55,7 @@ export default async function UseCasePage({ params }: Params) {
       </PageHeader>
 
       <Section bordered={false}>
-        <Container width="prose" className="px-0! sm:px-0!">
+        <Container width="prose" bleed>
           <Mdx source={body} />
         </Container>
       </Section>

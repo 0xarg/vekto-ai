@@ -12,17 +12,23 @@ import { cn } from "@/lib/utils";
  * Headings get ids and anchors so long pages are linkable — which matters for
  * answer engines quoting a single passage. Tables scroll inside their own
  * container so the page body never scrolls sideways.
+ *
+ * `scroll-mt-anchor` resolves from `--header-h` and `--header-gap`, the same
+ * two tokens the nav island and `scroll-padding-top` use. This was a literal
+ * `scroll-mt-24` that happened to equal the real offset; the comment on those
+ * tokens in globals.css records what happens when copies of that arithmetic
+ * drift.
  */
 
 type AnchorProps = React.ComponentPropsWithoutRef<"a">;
 
 const components = {
   h2: (props: React.ComponentPropsWithoutRef<"h2">) => (
-    <h2 className="text-h3 mt-14 mb-4 scroll-mt-24" {...props} />
+    <h2 className="text-h3 scroll-mt-anchor mt-14 mb-4" {...props} />
   ),
   h3: (props: React.ComponentPropsWithoutRef<"h3">) => (
     <h3
-      className="mt-10 mb-3 scroll-mt-24 text-xl font-semibold tracking-tight"
+      className="scroll-mt-anchor mt-10 mb-3 text-xl font-semibold tracking-tight"
       {...props}
     />
   ),
@@ -35,7 +41,14 @@ const components = {
   },
   table: (props: React.ComponentPropsWithoutRef<"table">) => (
     <div className="border-rule my-8 overflow-x-auto rounded-sm border">
-      <table className="w-full border-collapse text-sm" {...props} />
+      {/* The min-width is what makes the wrapper's `overflow-x-auto` do
+          anything. Without it a four-column table does not scroll on a phone,
+          it compresses — every header stacks one word per line and the rows
+          grow to several hundred pixels tall before anything overflows. */}
+      <table
+        className="w-full min-w-[32rem] border-collapse text-sm"
+        {...props}
+      />
     </div>
   ),
   th: (props: React.ComponentPropsWithoutRef<"th">) => (
@@ -49,7 +62,7 @@ const components = {
   ),
   /** A short, self-contained factual block — the passage answer engines lift. */
   Summary: ({ children }: { children: React.ReactNode }) => (
-    <div className="border-accent-line bg-accent-soft my-8 rounded-sm border p-6">
+    <div className="border-accent-line bg-accent-soft my-8 rounded-sm border p-5 sm:p-6">
       <div className="text-label text-accent mb-3 font-mono uppercase">
         At a glance
       </div>
@@ -58,7 +71,7 @@ const components = {
   ),
   /** Reserved for stating limits — what does not convert automatically. */
   Limits: ({ children }: { children: React.ReactNode }) => (
-    <div className="border-legacy-line bg-legacy-soft my-8 rounded-sm border p-6">
+    <div className="border-legacy-line bg-legacy-soft my-8 rounded-sm border p-5 sm:p-6">
       <div className="text-label text-legacy mb-3 font-mono uppercase">
         What this does not do
       </div>
@@ -77,7 +90,9 @@ export function Mdx({
   return (
     <div
       className={cn(
-        "prose prose-vekto prose-headings:font-semibold prose-headings:font-normal max-w-none tracking-tight",
+        // `break-words` on inline code: a long identifier or URL in body copy
+        // is the last way a single unbroken string can push the page sideways.
+        "prose prose-vekto prose-headings:font-normal prose-code:break-words max-w-none tracking-tight",
         className,
       )}
     >

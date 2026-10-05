@@ -411,6 +411,22 @@
   --text-numeral--line-height: 0.95;
   --text-numeral--letter-spacing: -0.03em;
 
+  /* The Evidence band's figure value. Sourced, so it is allowed to be large —
+     but it sits inside a card whose interior is ~230px on the narrowest phone,
+     where the previous fixed 2.75rem left a longer value string on the edge of
+     its own cell. Fluid for the same reason every other display size here is. */
+  --text-figure: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --text-figure--line-height: 1;
+  --text-figure--letter-spacing: -0.02em;
+
+  /* How far an anchored heading has to clear the floating nav island. The
+     fourth place this arithmetic was written out: the bar, the mobile sheet,
+     `scroll-padding-top`, and a hardcoded `scroll-mt-24` in the MDX heading
+     map. That last one happened to equal 6rem and so agreed by luck. Now
+     everything derives from --header-h and --header-gap, which is what the
+     comment on those two tokens says is supposed to happen. */
+  --spacing-anchor: calc(var(--header-h) + var(--header-gap) * 2 + 1rem);
+
   --breakpoint-3xl: 100rem;
 }
 
@@ -430,7 +446,7 @@
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     /* Clears the floating nav island, derived rather than guessed. */
-    scroll-padding-top: calc(var(--header-h) + var(--header-gap) * 2 + 1rem);
+    scroll-padding-top: var(--spacing-anchor);
   }
 
   @media (prefers-reduced-motion: reduce) {

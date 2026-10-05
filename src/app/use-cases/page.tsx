@@ -37,12 +37,12 @@ export default function UseCasesPage() {
           />
         ) : (
           <>
-            <div className="lattice lg:grid-cols-2">
+            <div className="lattice 3xl:grid-cols-3 md:grid-cols-2">
               {useCases.map(({ slug, frontmatter: fm }) => (
                 <Link
                   key={slug}
                   href={`/use-cases/${slug}`}
-                  className="group hover:bg-surface-2 flex flex-col p-6 transition-colors"
+                  className="group hover:bg-surface-2 flex flex-col p-5 transition-colors sm:p-6"
                 >
                   {fm.sourcePlatform && (
                     <span className="text-legacy bg-legacy-soft border-legacy-line mb-4 self-start rounded-sm border px-2.5 py-1 font-mono text-xs">

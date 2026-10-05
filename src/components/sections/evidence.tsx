@@ -38,7 +38,7 @@ export function Evidence() {
       className="py-band-loose border-rule border-t"
     >
       <Container width="wide">
-        <div className="mb-10 flex flex-col gap-6 sm:mb-14 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-10 flex flex-col gap-6 sm:mb-14 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <Label className="mb-4">Evidence</Label>
             <h2 className="text-h2">{fm.customer}, measured.</h2>
@@ -55,7 +55,7 @@ export function Evidence() {
           {fm.results.map((r, i) => (
             <div
               key={r.label}
-              className="border-rule shadow-tint flex flex-col rounded-lg border p-6"
+              className="border-rule shadow-tint flex flex-col rounded-lg border p-5 sm:p-6"
               style={{
                 ...tints[figureTints[i % figureTints.length]],
                 backgroundColor: "var(--chip-wash)",
@@ -65,7 +65,7 @@ export function Evidence() {
                 {r.label}
               </dt>
               <dd
-                className="mt-3 text-[2.75rem] leading-none font-semibold tracking-tight tabular-nums"
+                className="text-figure mt-3 font-semibold tabular-nums"
                 style={{ color: "var(--chip-ink)" }}
               >
                 {r.value}

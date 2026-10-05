@@ -94,7 +94,7 @@ export function MigrationLedger({
                 <PlatformPole platform={m.targetPlatform} pole="target" />
               </div>
 
-              <div className="flex items-start gap-8 lg:justify-end">
+              <div className="flex items-start gap-6 sm:gap-8 lg:justify-end">
                 <div className="flex flex-col gap-2">
                   <Readout
                     orientation="stacked"

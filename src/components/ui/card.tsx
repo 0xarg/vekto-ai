@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
  * `--accent` for target, `--legacy` for source — are the only colors on this
  * site that state something, and a tinted card must never be read as asserting
  * one. Tints exist to give a grid of cells visual variety, nothing more.
+ *
+ * `raised` carries `.sheen`, which composites over whatever fill is underneath
+ * — plain white or a tint wash — so a card reads as lit from one direction
+ * rather than as flat paper. `ruled` does not: a lattice cell has the grid's
+ * hairlines for structure and nothing behind it to catch light, and a sheen on
+ * every cell of a twelve-cell matrix is noise rather than gloss.
  */
 export const tints = {
   rose: {
@@ -72,7 +78,7 @@ export function Card({
   const classes = cn(
     "group flex flex-col",
     variant === "raised" &&
-      "border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
+      "sheen border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
     variant === "raised" && (washed && tint ? "shadow-tint" : "bg-surface"),
     variant === "glass" &&
       "glass rounded-lg transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",

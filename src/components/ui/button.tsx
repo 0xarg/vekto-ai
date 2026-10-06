@@ -9,16 +9,21 @@ import { cn } from "@/lib/utils";
  * landed on. That prop used to be mandatory on dark bands and silently wrong
  * when forgotten, which is the failure this removes.
  *
- * `primary` is Anthropic's clay, flat, carrying near-black text.
+ * `primary` is the indigo, carrying white, and it is the one control on the
+ * site with a gradient on it — see `.control-gloss` in globals.css for why that
+ * is allowed and what keeps it honest. The short version: the ramp is measured
+ * at the stop that is worst for the text sitting on it, exactly as the two
+ * auras are, so the gloss cannot be pushed to the point where the label stops
+ * clearing AA without `pnpm contrast` failing first.
  *
- * The dark text is not a stylistic choice. Clay measures 3.28:1 under white and
- * fails AA; under `--accent-ink` it measures 5.08:1. White-on-color is what
- * every other site in this category ships and it would have been wrong here on
- * the numbers alone — this is the rare case where the accessible answer is also
- * the more distinctive one.
+ * This docblock used to describe clay and near-black text, and the reasoning
+ * was sound for that colour: clay measured 3.28:1 under white and could only
+ * carry dark ink. Both the colour and the constraint are gone — the indigo
+ * measures 7.90:1 under white — and the dark-on-accent rule must not come back
+ * with some later palette by inertia.
  *
- * `secondary` stays a flat bordered surface, which is what keeps the clay
- * meaning "this is the one action on the band".
+ * `secondary` and `ghost` stay flat. A gradient on every control states
+ * nothing; a gradient on one states which action the band is for.
  *
  * Labels wrap, and the sizes are `min-h-*` rather than fixed heights. The base
  * carried `whitespace-nowrap` for a while, which is harmless until a caller
@@ -34,7 +39,7 @@ const button = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent-fill text-accent-ink border-accent-fill hover:bg-accent-fill-hover hover:border-accent-fill-hover border shadow-card",
+          "control-gloss bg-accent-fill text-accent-ink border-accent-fill hover:border-accent-fill-hover border",
         secondary:
           "bg-surface text-ink border-rule-strong hover:border-ink hover:bg-surface-2 border shadow-card",
         ghost:

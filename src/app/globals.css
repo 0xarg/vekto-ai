@@ -77,6 +77,25 @@
   --accent-line: rgb(67 56 202 / 0.28);
   --accent-wash: #eef0fb;
 
+  /* The top stop of the primary control's gradient, and the reason a gradient
+     on a control is allowed at all.
+
+     A gradient cannot be contrast-checked as one colour, so it is checked at
+     the end that is worst for the text on it — exactly the rule the two auras
+     already follow. The ink here is white, so the worst pixel is the lightest
+     one, and that is this token: 4.88:1 under #ffffff, which clears AA with
+     room rather than by a rounding. Push this lighter for more shine and the
+     button fails before it looks better; `pnpm contrast` will say so.
+
+     The hover peak is darker, not lighter, so the whole control deepens under
+     the cursor rather than the gradient inverting. */
+  --accent-fill-peak: #6a5fde; /* 4.88:1 under --accent-ink */
+  --accent-fill-peak-hover: #5b50dd; /* 5.77:1 */
+  /* The accent at shadow strength. Elevation on this site used to be neutral
+     grey, which under a chromatic brand reads as soot under the card rather
+     than as light around it. */
+  --accent-glow: 49 42 134;
+
   /* ---------------------------------------------------------------------
      Legacy — the source pole, for legacy systems in migration diagrams.
      Never used for CTAs.
@@ -171,12 +190,18 @@
   --glass-strong: rgb(255 255 255 / 0.82);
   --glass-faint: rgb(255 255 255 / 0.3);
   --glass-edge: rgb(255 255 255 / 0.65); /* the inset hairline of light */
+  /* The same hairline at the far edge, where a pane catches less light. A
+     separate token rather than mixing it inline in the shadow list: an
+     unsupported colour function there invalidates the whole `box-shadow`
+     declaration, which would drop the outer shadow along with the highlight. */
+  --glass-edge-soft: rgb(255 255 255 / 0.29);
   --glass-rule: rgb(23 25 32 / 0.08);
   --glass-blur: 20px;
   --glass-blur-sm: 10px;
 
   --glass-dark: rgb(12 13 17 / 0.72);
   --glass-dark-rule: rgb(255 255 255 / 0.09);
+  --glass-dark-edge-soft: rgb(255 255 255 / 0.04);
 
   /* The worst point of each aura, measured by rendering the gradient stack and
      sampling every pixel rather than by assuming total overlap — assuming it
@@ -228,6 +253,13 @@
   --d-accent-hover: #a7a1f6;
   --d-accent-fill: #9088f2;
   --d-accent-fill-hover: #a7a1f6;
+  /* The dark set's gradient runs the other way round, because the ink does.
+     White on the light set is worst at the lightest stop, so the peak is
+     capped there; near-black on this set is worst at the DARKEST stop, which
+     is `--d-accent-fill` itself and is already measured at 6.46:1. The peak is
+     therefore free to be lighter — it can only improve the ratio. */
+  --d-accent-fill-peak: #a7a1f6;
+  --d-accent-fill-peak-hover: #b8b3f9;
   --d-accent-ink: #0c0d11; /* 6.46:1 on the fill */
   --d-accent-soft: rgb(144 136 242 / 0.12);
   --d-accent-line: rgb(144 136 242 / 0.34);
@@ -301,6 +333,8 @@
   --accent-hover: var(--d-accent-hover);
   --accent-fill: var(--d-accent-fill);
   --accent-fill-hover: var(--d-accent-fill-hover);
+  --accent-fill-peak: var(--d-accent-fill-peak);
+  --accent-fill-peak-hover: var(--d-accent-fill-peak-hover);
   --accent-ink: var(--d-accent-ink);
   --accent-soft: var(--d-accent-soft);
   --accent-line: var(--d-accent-line);
@@ -323,6 +357,7 @@
   --glass: var(--glass-dark);
   --glass-strong: var(--glass-dark);
   --glass-edge: var(--glass-dark-rule);
+  --glass-edge-soft: var(--glass-dark-edge-soft);
   --glass-rule: var(--glass-dark-rule);
   --glass-solid: var(--glass-dark-solid);
   --glass-strong-solid: var(--glass-dark-solid);
@@ -419,15 +454,28 @@
   --color-syntax-value: var(--d-syntax-value);
   --color-syntax-punct: var(--d-syntax-punct);
 
-  /* Apple's own typefaces, via the system stack. They are not licensed for
-     webfont use, so this is the only way to get them — and it means the site
-     downloads no fonts at all. On Apple hardware this resolves to SF Pro
-     Display, SF Pro Text and New York; on Windows to Segoe UI and Georgia, on
-     Android to Roboto and a generic serif, all of which are more generic. That
-     tradeoff is inherent to the brief. */
-  --font-display: ui-serif, "New York", Georgia, "Times New Roman", serif;
+  /* Inter, loaded by `next/font/google` in layout.tsx and reached here through
+     the `--font-inter` variable it declares on <html>.
+
+     This replaces the system stack, and the no-webfont rule with it. The old
+     arrangement bought zero font files at the price of a different typeface on
+     every platform — New York on Apple hardware, Georgia on Windows, a generic
+     serif on Android — and the client has since named Inter directly. One
+     variable file covers every weight the site uses, self-hosted, so there is
+     still no third-party request and no layout shift.
+
+     Display and sans are the same face. The reference the client pointed at is
+     Inter top to bottom, and the two tokens stay separate for the same reason
+     --accent and --accent-fill do: they are two jobs, and a later decision may
+     need them to diverge again, as the New York pairing did.
+
+     Mono is unchanged. The code specimen needs a monospace face and a second
+     download for it would be weight bought with nothing. */
+  --font-display:
+    var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+    var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
     sans-serif;
   --font-mono:
     ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
@@ -451,21 +499,41 @@
 
   /* Elevation. `menu` is the header dropdown, the one thing that genuinely
      floats. `card` and `panel` lift a surface off the ground by a believable
-     amount — both near-neutral and low-opacity, because a colored or heavy
-     shadow is the tell. `glass` is wider and softer than either, because a
-     frosted panel reads as closer to the viewer than a card does. */
-  --shadow-menu: 0 12px 32px -12px rgb(23 25 32 / 0.18);
+     amount; `glass` is wider and softer than either, because a frosted panel
+     reads as closer to the viewer than a card does.
+
+     Every one of these is now mixed from `--accent-glow` rather than from
+     neutral grey. The note that used to sit here said a coloured shadow is the
+     tell, and that is true of a shadow coloured for decoration — a lilac drop
+     under a white card. This is the other thing: a near-black indigo at low
+     alpha, which is what a shadow actually looks like on a page lit by a
+     chromatic ground. Keep the alphas where they are; the hue is the change,
+     not the weight. */
+  --shadow-menu: 0 12px 32px -12px rgb(var(--accent-glow) / 0.22);
   /* A soft ambient lift for tinted cells. Wider than --shadow-card, because a
      card sitting on a colored wash needs more diffusion or it reads as a
      cut-out. */
   --shadow-tint:
-    0 1px 2px rgb(23 25 32 / 0.03), 0 8px 24px -8px rgb(23 25 32 / 0.08);
+    0 1px 2px rgb(var(--accent-glow) / 0.04),
+    0 8px 24px -8px rgb(var(--accent-glow) / 0.1);
   --shadow-card:
-    0 1px 2px rgb(23 25 32 / 0.04), 0 4px 12px -4px rgb(23 25 32 / 0.07);
+    0 1px 2px rgb(var(--accent-glow) / 0.05),
+    0 4px 12px -4px rgb(var(--accent-glow) / 0.09);
   --shadow-panel:
-    0 2px 4px rgb(23 25 32 / 0.04), 0 18px 44px -12px rgb(23 25 32 / 0.13);
+    0 2px 4px rgb(var(--accent-glow) / 0.05),
+    0 18px 44px -12px rgb(var(--accent-glow) / 0.16);
   --shadow-glass:
-    0 1px 2px rgb(23 25 32 / 0.04), 0 16px 40px -12px rgb(23 25 32 / 0.14);
+    0 1px 2px rgb(var(--accent-glow) / 0.05),
+    0 16px 40px -12px rgb(var(--accent-glow) / 0.17);
+  /* The primary control's own lift. Tighter and more saturated than a card's,
+     because a button is the one element meant to sit above the page rather
+     than on it. */
+  --shadow-control:
+    0 1px 2px rgb(var(--accent-glow) / 0.16),
+    0 8px 20px -6px rgb(var(--accent-glow) / 0.3);
+  --shadow-control-hover:
+    0 2px 4px rgb(var(--accent-glow) / 0.2),
+    0 12px 28px -6px rgb(var(--accent-glow) / 0.38);
 
   /* Vertical rhythm. Three band densities so a section's height states its
      editorial weight — a strip is not a primary argument. These interpolate,
@@ -580,11 +648,13 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    /* New York carries an optical-size axis, so size does the work that weight
-       had to do under SF. The previous setting was 600 with -0.03em tracking
-       precisely because SF has no such axis and weight was the only range
-       available; both numbers move back now that the axis is there. */
-    font-weight: 500;
+    /* Weight and tracking move back where they were before New York, and for
+       the reason that argument always rested on: New York has an optical-size
+       axis and could let size do the work, Inter has none, so weight is the
+       range available again. 600 with tight tracking is also how the reference
+       site sets its own headings. */
+    font-weight: 600;
+    letter-spacing: -0.02em;
     color: var(--ink);
     text-wrap: balance;
   }
@@ -617,6 +687,84 @@
 }
 
 @layer components {
+  /* ------------------------------------------------------------------------
+     Sheen.
+
+     The gloss the client asked for, and the cheapest honest version of it: a
+     single diagonal stop that leaves the top-left of a surface clean and lets
+     the accent settle into the bottom-right, so a flat white card reads as lit
+     from one direction instead of as a rectangle of paper.
+
+     It asserts nothing — it is a light model, not a mark — which is what keeps
+     it inside non-negotiable #6 while the decorative surface it adds is
+     exactly what that rule's amendment permits.
+
+     Two reasons it is a background-image rather than a pseudo-element: it
+     composites over whatever `background-color` the caller already set, so a
+     tinted card keeps its wash underneath; and it costs no extra box, so
+     `overflow-hidden` and the existing hover transform still behave.
+
+     On a dark band the direction of the light does not change, only its
+     colour — white at low alpha, because indigo on near-black is invisible.
+     ------------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------------
+     The primary control's gradient.
+
+     This is an amendment. The rule was "there is no gradient on a control" —
+     the gradients on this site are the two auras, and they are backdrops. That
+     rule was written against clay, which failed under white at 3.28:1 and had
+     no headroom to ramp anywhere; it also sat alongside a section that already
+     listed gradient CTA fills as permitted, so the two halves of the file
+     disagreed. The client has now asked for gloss directly. This resolves both.
+
+     What makes it legal rather than merely pretty is that it is measured. The
+     ramp runs from `--accent-fill` to `--accent-fill-peak`, and the peak is
+     pinned at a value where white still clears AA — see the token block. The
+     inset highlight is the specular top edge; the control is the one element
+     on the page that is meant to look like it catches light.
+
+     `secondary` and `ghost` stay flat. A gradient on every control states
+     nothing; a gradient on one states which action the band is for.
+     ------------------------------------------------------------------------ */
+  .control-gloss {
+    background-image: linear-gradient(
+      175deg,
+      var(--accent-fill-peak) 0%,
+      var(--accent-fill) 62%
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      var(--shadow-control);
+  }
+
+  .control-gloss:hover {
+    background-image: linear-gradient(
+      175deg,
+      var(--accent-fill-peak-hover) 0%,
+      var(--accent-fill-hover) 62%
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      var(--shadow-control-hover);
+  }
+
+  .sheen {
+    background-image: linear-gradient(
+      200deg,
+      rgb(255 255 255 / 0) 28%,
+      rgb(var(--accent-glow) / 0.05) 100%
+    );
+  }
+
+  [data-tone="inverse"] .sheen,
+  [data-tone="inverse"].sheen {
+    background-image: linear-gradient(
+      200deg,
+      rgb(255 255 255 / 0.045) 0%,
+      rgb(255 255 255 / 0) 62%
+    );
+  }
+
   /* ------------------------------------------------------------------------
      Disclosure animation.
 
@@ -661,11 +809,18 @@
   .glass,
   .glass-strong {
     border: 1px solid var(--glass-rule);
+    /* Two inset highlights, not one. The top edge was always here — it is what
+       stops a frosted panel reading as a flat fill. The bottom one is the
+       glossy half: a real pane catches light at the far edge as well, and
+       without it the panel looks like frosted film rather than glass. Both are
+       the same `--glass-edge` token at different strengths, so a re-theme
+       moves them together. */
     box-shadow:
       inset 0 1px 0 var(--glass-edge),
+      inset 0 -1px 0 var(--glass-edge-soft),
       var(--shadow-glass);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(165%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(165%);
   }
 
   .glass {
@@ -707,12 +862,13 @@
   .glass-raised {
     box-shadow:
       inset 0 1px 0 var(--glass-edge),
+      inset 0 -1px 0 var(--glass-edge-soft),
       var(--shadow-panel);
   }
 
   .glass-pill {
-    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur-sm)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(165%);
+    backdrop-filter: blur(var(--glass-blur-sm)) saturate(165%);
   }
 
   /* ------------------------------------------------------------------------

@@ -133,7 +133,10 @@ export function Section({
   const interior = panel ? (
     <div
       className={cn(
-        "rounded-xl px-5 py-12 sm:px-10 sm:py-16",
+        // `.sheen` makes the panel read as an object catching light rather than
+        // as a rectangle of flat fill, which is the whole reason a panelled
+        // band exists. It composites over whichever tone paints underneath.
+        "sheen shadow-card rounded-xl px-5 py-12 sm:px-10 sm:py-16",
         bandTone[tone] || "bg-surface-2",
       )}
     >

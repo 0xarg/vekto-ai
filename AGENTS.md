@@ -157,8 +157,26 @@ than its reputation.
 - **Two accent tokens, two jobs.** `--accent` is text and marks, `--accent-fill`
   is fills. They hold the same value today. They stay two tokens because they
   are two jobs, and the clay palette is the proof that they can need to diverge.
-- There is **no gradient on a control**. The gradients on this site are the two
-  auras, and they are backdrops, never fills on a button or a chip.
+- **The primary control carries a gradient, and only the primary control.** This
+  is an amendment. The rule read "there is no gradient on a control — the
+  gradients on this site are the two auras, and they are backdrops, never fills
+  on a button or a chip." It was written against clay, which failed under white
+  at 3.28:1 and had no headroom to ramp anywhere, and it contradicted the
+  template section below, which already listed gradient CTA fills as permitted.
+  The client asked for gloss directly. Both halves are resolved here.
+
+  What makes it legal rather than merely pretty is that it is **measured**.
+  `.control-gloss` ramps from `--accent-fill` to `--accent-fill-peak`, and the
+  peak is pinned where white still clears AA — 4.88:1, with the hover peak at
+  5.77:1. A gradient cannot be contrast-checked as one colour, so it is checked
+  at the stop that is worst for the text on it, exactly as the two auras are.
+  The dark set runs the other way, because its ink is near-black: its worst stop
+  is the darkest, which is `--d-accent-fill` and is already measured.
+
+  Push the peak lighter for more shine and `pnpm contrast` fails before the
+  button looks better. `secondary` and `ghost` stay flat — a gradient on every
+  control states nothing; a gradient on one states which action the band is for.
+  The auras remain backdrops, and a chip still never takes a gradient fill.
 
 ### The two semantic poles
 
@@ -218,7 +236,21 @@ direction of travel by color everywhere a migration is depicted.
 - **Radius** is four steps: 4px for controls and marks, 10px, then 16 and 24 for
   cards and panels. **Elevation** is `--shadow-card` and `--shadow-panel` on
   light, `--shadow-glass` under a frosted panel, `--shadow-menu` for the
-  dropdown.
+  dropdown, and `--shadow-control` under the primary button.
+- **Every shadow is mixed from `--accent-glow`, not from neutral grey.** The
+  note that used to sit in the token block said a coloured shadow is the tell,
+  and that is true of a shadow coloured for decoration — a lilac drop under a
+  white card. This is the other thing: a near-black indigo at low alpha, which
+  is what a shadow looks like on a page lit by a chromatic ground. The alphas
+  did not move; only the hue did. Keep it that way.
+- **`.sheen`** is a single diagonal stop that leaves a surface's top-left clean
+  and lets the accent settle into the bottom-right, so a flat card reads as lit
+  from one direction. `Card raised` and `Section panel` take it; `Card ruled`
+  does not, because a lattice cell has the grid's hairlines for structure and a
+  sheen on twelve of them is noise. It is a `background-image`, so it composites
+  over whatever fill the caller already set and costs no extra box. It states
+  nothing — it is a light model, not a mark — which is what keeps it inside
+  non-negotiable #6.
 - `src/lib/derived.ts` — counts, positions and the platform lists. The only
   sanctioned source for a numeral rendered as design.
 - `Readout` — a value with the thing it measures. `scale="display"` is only
@@ -240,27 +272,44 @@ direction of travel by color everywhere a migration is depicted.
 
 ### Typography
 
-**No webfonts.** The stack is Apple's own — New York for headings, SF Pro Text
-for body, SF Mono for code — reached through the system font stack in
-`globals.css`, because those faces are not licensed for webfont use.
+**Inter, one webfont, everywhere.** Loaded by `next/font/google` in
+`layout.tsx`, which downloads it at build time and serves it from our own
+origin. `--font-display` and `--font-sans` are the same face; `--font-mono`
+stays on the system stack.
 
-- Headings are **New York at weight 500**, loosely tracked. This reverses the
-  previous setting, and the reasoning reverses with it: SF ran at 600 with tight
-  tracking precisely because it has no optical-size axis and weight was the only
-  range available. New York has that axis, so size does the work again.
-- The serif used to be declared and deliberately unused — "the whole site is one
-  sans voice, do not reintroduce it piecemeal." It is the voice now. Headings
-  and anything that reads as a title take `font-display`; body, labels, controls
-  and the mono readouts stay sans.
-- The site downloads **zero font files**. On Windows the headings fall back to
-  Georgia and the body to Segoe UI, on Android to a generic serif and Roboto.
-  Georgia in particular is noticeably more dated than New York. That tradeoff is
-  inherent to the brief and was accepted knowingly.
-- This is the **fourth** type decision, and the client rejected three:
-  Newsreader+Inter, then Fraunces+Instrument Sans. New York is neither of the
-  rejected serifs, but treat it as live rather than settled. **Inter in
-  particular reads as a default rather than a decision** and should not come
-  back.
+This is an amendment, and it reverses the rule it replaces outright. That rule
+read **"No webfonts"** — the stack was Apple's own, New York for headings and
+SF Pro Text for body, because those faces are not licensed for webfont use —
+and it ended with a line saying Inter in particular reads as a default rather
+than a decision and should not come back.
+
+**The client has now asked for Inter directly**, on 6 Oct 2026, by naming
+omnificx.com, which is Inter top to bottom. That judgement was ours and his
+instruction is the later record. Do not reinstate the system stack, and do not
+treat the "reads as a default" line as still standing — it is quoted here so
+nobody reintroduces it from memory, not as live guidance.
+
+- This is the **fifth** type decision and the first the client specified
+  himself. He rejected three before it — Newsreader+Inter, then
+  Fraunces+Instrument Sans — and New York was the fourth, our own choice,
+  unrejected but superseded.
+- Headings are **Inter at weight 600**, tracked at `-0.02em`. This reverses the
+  New York setting and the reasoning reverses with it, because the argument was
+  always about the axis rather than about the number: New York has an
+  optical-size axis and could let size do the work, Inter has none, so weight is
+  the range available again. 600-and-tight is also how the reference sets its
+  own headings.
+- **The serif is gone.** It was declared and deliberately unused once, then
+  became the voice, and is now neither. If a serif comes back it is a new
+  decision, taken deliberately — not a revival of New York.
+- The site now downloads **one font file**: Inter is variable, so a single
+  woff2 covers every weight. The old arrangement bought zero files at the price
+  of a different typeface per platform — Georgia on Windows, a generic serif on
+  Android. What the no-webfont rule was really protecting was privacy and
+  layout stability, and `next/font` keeps both: no runtime request to Google,
+  no third-party origin, and a metric-matched fallback so nothing shifts.
+- **Mono is unchanged.** The code specimen needs a monospace face and a second
+  download for it would be weight bought with nothing.
 
 ### The decorative tints
 
@@ -334,6 +383,15 @@ Two rules, both load-bearing rather than stylistic:
   fallbacks are **not progressive enhancement**. 58% white over a saturated aura
   with no blur is unreadable, not merely plainer, so both fall back to the
   opaque composite.
+- **Two inset highlights, not one.** The top edge was always there — it is what
+  stops a frosted panel reading as a flat fill. The bottom one is the glossy
+  half: a real pane catches light at its far edge too, and without it the panel
+  reads as frosted film. The far edge is its own token, `--glass-edge-soft`,
+  rather than a colour mixed inline: an unsupported colour function inside a
+  `box-shadow` list invalidates the whole declaration, which would drop the
+  outer shadow along with the highlight. `saturate()` went from 140% to 165% in the same pass; neither
+  change touches a measured value, because the `-solid` companions are derived
+  from the alpha and the aura floor, and neither moved.
 
 ### Navbar
 

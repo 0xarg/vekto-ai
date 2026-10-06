@@ -1,13 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-
-/**
- * No webfonts. The type stack is Apple's own — SF Pro Display, SF Pro Text and
- * SF Mono — reached through the system font stack in globals.css, because those
- * faces are not licensed for webfont use. The site downloads no font files at
- * all; see the `--font-*` block there for the fallback chain on other
- * platforms.
- */
 
 import { site } from "@/lib/site";
 import { GROUND_HEX } from "@/lib/seo";
@@ -15,6 +8,30 @@ import { organizationSchema, websiteSchema } from "@/lib/jsonld";
 import { JsonLd } from "@/components/ui/json-ld";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+
+/**
+ * One webfont, and only one.
+ *
+ * This reverses the rule that stood here before — "no webfonts", the type stack
+ * is Apple's own, the site downloads no font files at all. That rule was ours,
+ * not the client's, and it ended with Windows falling back to Georgia and
+ * Segoe UI. The client has now named a face directly, by pointing at a site
+ * built on Inter, and a named request outranks a self-imposed constraint.
+ *
+ * `next/font/google` downloads the face at build time and serves it from our
+ * own origin, so this adds no runtime request to Google and no layout shift —
+ * the privacy and performance properties the old rule was really protecting
+ * survive the change. Inter is variable, so one file covers every weight the
+ * site uses instead of the five static cuts the reference ships.
+ *
+ * Mono stays on the system stack. The code specimen needs a monospace face and
+ * a second download for it would be weight bought with nothing.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -57,7 +74,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <body className="flex min-h-screen flex-col">
         <JsonLd schema={[organizationSchema(), websiteSchema()]} />
         <SiteHeader />

@@ -140,6 +140,18 @@ const checks = [
       ["ink-faint / surface-2", "ink-faint", "surface-2", 4.5],
     ],
   ],
+  /*
+   * The primary control carries a gradient, which cannot be checked as one
+   * colour. It is checked at the stop that is worst for the text on it, the
+   * same way the two auras are: white ink, so the worst pixel is the lightest,
+   * and that is `--accent-fill-peak`. The `-hover` pair is measured too, because
+   * a hover state nobody checked is how a gradient quietly drifts out of AA.
+   *
+   * The dark set runs the opposite way — near-black ink, so its worst stop is
+   * the darkest, which is `--d-accent-fill` and is already measured in the dark
+   * group below. Its peak is lighter and can only improve the ratio, so it
+   * needs no row of its own.
+   */
   [
     "Light surfaces — accent and controls",
     [
@@ -147,7 +159,25 @@ const checks = [
       ["accent / surface", "accent", "surface", 4.5],
       ["accent / surface-2", "accent", "surface-2", 4.5],
       ["accent-ink / accent-fill (button)", "accent-ink", "accent-fill", 4.5],
+      [
+        "accent-ink / accent-fill-peak  (gradient worst pixel)",
+        "accent-ink",
+        "accent-fill-peak",
+        4.5,
+      ],
+      [
+        "accent-ink / peak-hover  (gradient, hover)",
+        "accent-ink",
+        "accent-fill-peak-hover",
+        4.5,
+      ],
       ["accent-fill / ground (button edge)", "accent-fill", "ground", 3.0],
+      [
+        "accent-fill-peak / ground  (button edge)",
+        "accent-fill-peak",
+        "ground",
+        3.0,
+      ],
       ["legacy / ground", "legacy", "ground", 4.5],
       ["legacy / surface", "legacy", "surface", 4.5],
       ["legacy / surface-2", "legacy", "surface-2", 4.5],

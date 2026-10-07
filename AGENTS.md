@@ -122,25 +122,53 @@ Page section plans live in the SEO blueprint artifact, not here.
 - **The five agent detail pages still want a distinct worked example each.**
   Structurally they now differ: each renders its own numbered inputs/outputs
   ledger and a position rail marking its stage, both derived from the registry.
-  That is enough to stop them being near-identical markup, but it is not
-  evidence. If the client cannot supply five worked examples, collapsing them
+  The rail is now the shared `PipelineFlow`, which makes the five pages differ
+  by one marked cell rather than by bespoke markup. That is enough to stop them
+  being near-identical to a crawler, but it is not evidence. If the client cannot supply five worked examples, collapsing them
   into one `/agents` page with anchors is still the fallback.
-- **No OG image exists.** `src/lib/seo.ts` documents one but emits no `images`
-  key, and there is no `opengraph-image` file, so every social share is bare.
-  Needs `opengraph-image.tsx` — remember `params` is a Promise in Next 16.
+- **The decorative amber tint is the same colour as `--warn`.**
+  `--tint-amber-ink` is byte-identical to `--warn`, and the dark set inherits
+  it structurally — `--d-tint-amber-ink` is within 1.02:1 of `--d-warn`. That
+  is exactly the hue/pole collision the tints block warns about, and it is
+  live. The only real fix is moving the amber hue in both sets, roughly 42°
+  toward copper, which is a palette decision rather than a bug fix.
+  `pnpm contrast` names both collisions on every run so they cannot be
+  forgotten.
 
 ## Design system
 
-Light is the ground the page is written on. The near-black set is **punctuation**
-— it appears in exactly three places: the code specimen's interior, the pull
-quote, and the closing CTA panel. Over both sits a third set, the glass
-surfaces, which are translucent and therefore belong to neither.
+Light is the ground the page is written on, and it is what every visitor gets.
+The near-black set has two jobs. On a light page it is **punctuation** — the
+code specimen's interior, the pipeline, the pull quote and the closing CTA
+panel. It is also the whole page when the reader has asked for dark. Over both
+sits a third set, the glass surfaces, which are translucent and therefore belong
+to neither.
+
+The second job is an amendment. This note used to say the near-black set
+appeared "in exactly three places" and `layout.tsx` declared `colorScheme:
+"light"` with a comment calling it "honest rather than aspirational: the site
+has one surface set, and the dark tokens are band scoping, not a theme." There
+is a theme now — see Dark mode below — and it is built from the same `--d-*`
+values rather than from a second palette.
 
 ### Brand
 
-**Cool white, deep indigo, two chromatic auras.** Ground `#FBFBFD`, white
-`#FFFFFF`, a cool alternating band `#F3F4F8`, near-black `#0C0D11`, and indigo
-`#4338CA`.
+**Neutral white, deep indigo, two chromatic auras.** Ground `#FCFCFC`, white
+`#FFFFFF`, a neutral alternating band `#F4F4F5`, hairlines `#E4E4E7` and
+`#D4D4D8`, near-black `#0C0D11`, and indigo `#4338CA`.
+
+The grounds are an amendment within an amendment. They were `#FBFBFD` and
+`#F3F4F8` — a deliberate cool cast, argued for on the grounds that "cool white
+is what makes the glass above it look like glass rather than like fogged
+paper". The client rejected it on sight as bluish, which is the second time a
+ground has been rejected for its temperature.
+
+Both halves of that argument survive the change. The chroma that makes glass
+read as glass lives in the auras underneath it — they are unchanged, and they
+are the thing actually being frosted — so the ground itself does not need a
+cast to do that job. The hairlines moved with the grounds and for the same
+reason: at 12 and 17 steps of blue they would have been the only thing left
+carrying the cast, which is the complaint restated rather than answered.
 
 This is an amendment, and a large one. The palette was Anthropic's clay — clay
 `#CC785C` on ivory `#FAF9F5` with a cream `#F0EEE6` band — which landed after
@@ -208,19 +236,39 @@ direction of travel by color everywhere a migration is depicted.
 
 ### Tokens
 
-- **Theme scoping is CSS, not props.** `[data-tone="inverse"]` reassigns the raw
-  tokens for a whole subtree and `@theme inline` resolves each `var()` at the use
-  site, so every utility underneath re-themes itself. There is no `tone` prop on
-  `Button`, `Label` or `Readout`, and nothing should reintroduce one.
+- **Theme scoping is CSS, not props.** `@theme inline` resolves each `var()` at
+  the use site rather than baking a value into the utility, so reassigning the
+  raw tokens on a subtree re-themes every utility underneath it. There is no
+  `tone` prop on `Button`, `Label` or `Readout`, and nothing should reintroduce
+  one.
+
+  Two selectors share that one declaration list — `:root[data-theme="dark"]`
+  for the page and `[data-tone="inverse"]` for a band — and they must not be
+  allowed to diverge. An inverse band inside a dark page has to be an exact
+  no-op, and a single declaration present in one and absent from the other
+  would make that band behave differently depending on the page it sits on,
+  which is not something review would catch.
+
 - **A token may reference another rather than repeat its hex.** `--focus` is
   `var(--accent)`; the syntax classes point at the two poles. This is not
   cosmetic: those three were duplicated hexes once and silently survived a
   re-theme, keeping the old color while everything around them changed.
   `scripts/contrast.mjs` resolves the indirection so the report measures real
   values.
+- **Every real value is declared in `:root`**, the dark ones under a `--d-*`
+  prefix, and the theme block only aliases. That is not a style preference: it
+  is what keeps the palette measurable, because `pnpm contrast` reads only the
+  `:root` block and is structurally blind to everything after it. A value
+  declared inside the theme block would be a value nothing ever checks.
 - **`pnpm contrast`** re-derives every pair and reads **only the `:root` block** —
   a flat scan measures light foregrounds against dark backgrounds, because the
-  scoping block reassigns light token names further down. For an ad-hoc pair use
+  scoping block reassigns light token names further down. The parse is
+  positional — find `:root {`, stop at the first `\n}` — so **never nest a block
+  inside `:root`**: a nested `@media` puts a `}` inside the window and silently
+  truncates the scan. The script asserts the window it found is the right one
+  and exits loudly if it is not. It also lints for `var()` references to tokens
+  that are declared nowhere, which is how `--aura-cta-floor` survived in the
+  scoping block for several commits. For an ad-hoc pair use
   `node scripts/contrast.mjs '#aaa' '#bbb'`; `pnpm` does not forward the args and
   will silently print the full report instead.
 - The script now also **parses `rgb(r g b / a)` and composites**. A translucent
@@ -243,6 +291,18 @@ direction of travel by color everywhere a migration is depicted.
   white card. This is the other thing: a near-black indigo at low alpha, which
   is what a shadow looks like on a page lit by a chromatic ground. The alphas
   did not move; only the hue did. Keep it that way.
+
+  On the dark set the hue goes to black and the alphas still do not move, which
+  is the same argument rather than an exception to it: the note above holds
+  _because the light ground is chromatic_, and on near-black there is no
+  coloured light for an occlusion to be tinted by. A lighter indigo under a card
+  there would be the decorative lilac drop this rule rejects. A black shadow on
+  a ground at luminance 0.0045 separates nothing, so four of the six shadow
+  tokens lead with `--shadow-ring` — nothing on light, an inset hairline on
+  dark. Not `--shadow-glass`, which has a border and two inset highlights
+  already, and not `--shadow-control`, where an inset ring eats the gloss
+  edge.
+
 - **`.sheen`** is a single diagonal stop that leaves a surface's top-left clean
   and lets the accent settle into the bottom-right, so a flat card reads as lit
   from one direction. `Card raised` and `Section panel` take it; `Card ruled`
@@ -329,19 +389,42 @@ they are `rose` and `teal`, chosen to clear both poles on the wheel.
 - `Card` takes `tint`, `icon`, `graphic` and `washed`. The tint sets `--chip-wash`
   and `--chip-ink` on the element, so `.chip` and any child can read them
   without a class map.
-- `pnpm contrast` checks each hue four ways; **ink on its own wash** is the pair
-  that breaks first if a wash is pushed for more colour.
+- **The dark set has two of the three steps**, `--d-tint-*-wash` and
+  `--d-tint-*-ink`. The base hue is a fill or gradient stop and reads the same
+  on either surface; the other two break outright on near-black, where a pastel
+  wash becomes the brightest thing on the page. The washes hold their saturation
+  at a low lightness on purpose — desaturating them there collapses all five
+  into the same brown-grey, and the hue is the only job a decorative tint has.
+- `pnpm contrast` checks each hue **five** ways. **Ink on its own wash** is the
+  pair that breaks first if a wash is pushed for more colour on the light set;
+  on the dark set it is **`--ink-faint` on the wash**, because `evidence.tsx`
+  puts a `text-ink-faint` figure label directly on one. The light set had that
+  row missing entirely — all five pass, and within 0.02 of each other, which is
+  the tell that the washes were luminance-matched for exactly that pair and the
+  check was simply never written.
 
 ### Auras
 
 `.aura-hero`, `.aura-cta` and `.aura-quote` in `globals.css` are multi-stop
-radial meshes used as a panel's whole background. **Three** — the hero, the
-closing CTA, and the quote band. `.aura-quote` reuses `.aura-cta`'s exact stops
-and alphas and differs only in geometry, so both dark auras share one worst
-pixel and one set of solid companions; give a new aura its own ramp and it needs
-its own measurement. `CtaBand` renders on every page, so that one is site-wide; the
-hero aura is the landing one. They replace `.mesh-warm`, `.mesh-cool` and
-`.mesh-cta`; `.mesh-cool` had no consumers and was deleted rather than ported.
+radial meshes used as a panel's whole background. **Three rules, four
+geometries** — the hero, the closing CTA, the quote band, and the hero again on
+a dark page, where it takes the dark ramp instead of its own.
+
+All three dark geometries consume one shared set of stops, `--aura-dark-*`, so
+"every dark aura shares one worst pixel" is structural rather than something
+three copies of the same gradient have to keep true by hand. `CtaBand` renders
+on every page, so that one is site-wide; the hero aura is the landing one. They
+replace `.mesh-warm`, `.mesh-cool` and `.mesh-cta`; `.mesh-cool` had no
+consumers and was deleted rather than ported.
+
+Sharing stops is **not** why they share a worst pixel, and the distinction
+matters because it is what licenses the dark hero. Overlap is geometry, so
+identical stops under different ellipses could land anywhere. They agree because
+`--aura-cta-peak` is the cyan stop's own centre composited alone, at a point
+where the other two layers are past the end of their ramps — green being 71.5%
+of luminance is what wins it the contest. The hero's stop ends are wider
+(70/70/72% against 60/62/64%) and it still holds. That is measured, not
+reasoned: `pnpm contrast` renders each stack and samples it.
 
 They are not decoration added behind the glass. **They are the half of it that
 makes the other half legible** — a frosted panel over flat white is a grey box.
@@ -350,10 +433,21 @@ makes the other half legible** — a frosted panel over flat white is a grey box
   exception: the CTA band's heading and lede sit on `.aura-cta` directly. That
   is enforced rather than asserted — `pnpm contrast` measures both inks against
   the aura's worst pixel.
-- `--aura-floor` and `--aura-cta-peak` are those worst pixels, **measured** by
-  rendering the gradient stack and sampling every pixel. Assuming total stop
-  overlap instead cost the hero two full steps of saturation before it was
-  measured.
+- `--aura-floor` and `--aura-cta-peak` are those worst pixels, **derived** by
+  `pnpm contrast`: it renders each gradient stack at several aspect ratios and
+  samples every pixel, then fails if the declared token has drifted. They were
+  hand-measured constants with a comment saying so and nothing that re-derived
+  them, which meant moving a stop silently invalidated every glass composite.
+  Assuming total stop overlap instead of measuring cost the hero two full steps
+  of saturation before it was measured at all.
+- **The dark auras paint their own base, and have to be told to.** `.aura-cta`
+  and `.aura-quote` are applied to the same element that carries
+  `data-tone="inverse"`, and that block paints `background-color` and is
+  unlayered, so for a long time it beat them and the gradients composited over
+  `--d-ground` instead of `--aura-dark-base`. Close enough to look right, and
+  wrong by exactly the amount the peak is measured over. They are restated at
+  the winning specificity next to the `.glass` restatement, for the same
+  reason.
 - The two are **opposite ends on purpose**. Dark text on the light aura is worst
   at the aura's darkest pixel; light text on the CTA aura is worst at its
   brightest. One shared "floor" token would have been wrong in one of the two
@@ -406,9 +500,50 @@ whatever arrives. Past the threshold it also takes `.glass-raised` rather than a
 bare `shadow-panel` utility, which would replace `box-shadow` outright and take
 the inset hairline of light with it.
 
+The theme toggle is its own always-visible button, placed before the CTA
+cluster and the hamburger. It cannot join the cluster, which starts at `lg`:
+the theme is not a desktop feature. It is `h-9`, not the hamburger's 44px box,
+because the island is the one fixed-height surface on the site and at 320px it
+already carries a wordmark and a hamburger.
+
 Note when testing: **programmatic `window.scrollTo` does not dispatch a scroll
 event** in the browser-automation context, so the island will appear not to
-react. Scroll with a real wheel event to verify it.
+react. Scroll with a real wheel event to verify it. The same context pins the
+page viewport, so resizing the window does not test the mobile layout — check
+that on a real narrow viewport.
+
+### Dark mode
+
+**Light is the default for every visitor.** Dark is opt-in, through the header
+toggle, remembered in `localStorage`. `prefers-color-scheme` is deliberately not
+consulted on arrival: the sourced bands, the two semantic poles and the code
+specimen were all designed and contrast-checked on light first, and handing an
+unasked-for theme to a reader on OS-dark is a worse default than one click.
+
+- **It is the same `--d-*` values, not a second palette.** The theme block and
+  the band block share one declaration list — see Tokens for why they must not
+  diverge.
+- **`data-theme` on `<html>` is the single source of truth.** A parser-blocking
+  inline script as the first child of `<body>` sets it before the first paint;
+  the toggle reads and writes it there rather than keeping a copy, via
+  `useSyncExternalStore`. It always writes the attribute, never only for dark,
+  so the toggle's read path has one invariant to rely on, and anything other
+  than the literal `"dark"` resolves to light — a corrupted storage value
+  cannot produce a dark first paint. With JavaScript off nothing is written and
+  `:root`'s light values apply, which is the opt-in rule restated.
+- **`suppressHydrationWarning` goes on `<html>` and nowhere else.** It covers
+  the one attribute that script mutates and hides nothing else.
+- **`colorScheme` lives in CSS, not in `viewport`.** As a viewport key it
+  resolves against the OS preference, so it would hand a reader on OS-dark the
+  dark scrollbars and form controls over a light page.
+- **`themeColor` cannot fully escape that**, and this is the one known wart.
+  Its `media` keys also resolve against the OS, so a reader on OS-light who
+  opts into dark gets a light address bar over a dark page. The array form is
+  the best a static value can do; the toggle closes the gap by rewriting the
+  live meta tags on change.
+- **`@custom-variant dark` is keyed to the attribute**, not to
+  `prefers-color-scheme`. Without it Tailwind v4's default would quietly
+  contradict the rule above the first time anyone writes a `dark:` utility.
 
 ### The code specimen
 
@@ -466,10 +601,20 @@ CSS only; there is no animation library and none should be added.
   infinite animation forced to a single 0.01ms iteration parks at whatever frame
   it lands on.
 
+  This line was aspirational for a long time and is now true. The bus pulse had
+  no keyframe, no utility and no usage anywhere in the tree or its history —
+  the documentation was describing an intention. `PipelineFlow` is where it
+  lives. It has to be a **separate overlay stroke** rather than a second
+  animation on the drawn line: `animate-draw` owns `stroke-dasharray`, and one
+  stroke cannot carry two dash patterns, which is the same reason a stroke
+  cannot be both dashed and animated.
+
 ### Diagrams
 
 `src/components/diagrams/` — inline SVG, no library. Before these the repo
-contained no SVG at all, so this is the shared contract rather than a style.
+contained no SVG at all, so this is the shared contract rather than a style. It
+lives in `svg.tsx`; `agent-diagram.tsx` and `concept-diagram.tsx` each held a
+byte-identical copy of it until a third consumer arrived.
 
 - Colour resolves from `currentColor` or a token the caller sets. Never a hex
   (non-negotiable #5), which is also what lets one diagram sit on a tinted card,
@@ -492,6 +637,21 @@ contained no SVG at all, so this is the shared contract rather than a style.
   engagement diagram drew a filled bar at 85/50/20 percent — a fabricated
   statistic in a diagram's clothes. It marks one of three positions now, because
   the ordering is something the copy supports and the distances are not.
+- **`pipeline-flow.tsx` is the one canonical picture of the product.** Three
+  variants off one component — `overview` horizontal, `rail` vertical for the
+  pinned panel in `AgentRail`, `position` for an agent detail page. It replaced
+  three separate renderings of the same five registry agents: a ruled dark
+  strip on `/platform` and the pair pages, a bespoke five-cell nav on each agent
+  page, and the rail inside `AgentRail`. A change to the pipeline was a change
+  in three places and was never made in three places.
+
+  Two things to know before editing it. The bus is positioned as a hairline
+  strip pinned to the centre of the stage marks, not as a layer stretched over
+  the list — stretched, its position depended on how tall the copy underneath
+  happened to be. And an SVG carrying a `viewBox` is a replaced element with an
+  intrinsic size, so `inset-x-0` alone will not stretch it; `w-full` has to be
+  stated or it silently renders at 100px.
+
 - `FigureChart` draws a sourced figure only when its frontmatter declares a
   `chart` block, and returns `null` otherwise — the same discipline as
   `Pending`. It never parses `value` or `source`: the comparators live in prose
@@ -549,3 +709,13 @@ Nothing structural. The MDX content layer and all four detail templates
 (`/resources/[slug]`, `/case-studies/[slug]`, `/use-cases/[slug]`,
 `/solutions/[slug]`) landed in 144e7f5. What is missing is content: see
 `pnpm pending`.
+
+`pnpm pending` separates **debts from satisfied guards**. Some markers only
+render when a collection is empty, or when it holds a draft, and a flat scan of
+the source counted those as owed — reporting two items on /case-studies that
+the client had already delivered. The guards are resolved against `content/`
+now, by reading the JSX condition rather than the marker's prose: /use-cases
+carries the same shape of guard and it genuinely does render, because that
+collection really is empty. Anything guarded that cannot be resolved stays in
+the owed list. Reporting a debt that turns out to be satisfied costs a
+question; hiding one costs a launch.

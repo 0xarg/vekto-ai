@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/sections/page-header";
 import { Section } from "@/components/ui/section";
 import { PendingSection } from "@/components/ui/pending-section";
 import { Readout } from "@/components/ui/label";
-import { PipelineStrip } from "@/components/sections/pipeline-strip";
+import { PipelineFlow } from "@/components/diagrams/pipeline-flow";
 import { CtaBand } from "@/components/sections/cta-band";
 
 export const metadata = buildMetadata({
@@ -52,7 +52,12 @@ export default function PlatformPage() {
         </ul>
       </PageHeader>
 
-      <PipelineStrip />
+      {/* The canonical pipeline. This page and the pair pages used to carry a
+          different rendering of the same five registry agents than the
+          homepage did; there is one now. */}
+      <Section bordered={false} density="tight">
+        <PipelineFlow variant="overview" />
+      </Section>
 
       <PendingSection
         bordered={false}

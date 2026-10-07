@@ -5,12 +5,21 @@
  *
  * globals.css annotates its colors with measured contrast ratios rather than
  * estimates, and the site runs two surface sets — the light reading surfaces
- * and the `--d-*` dark structural ones — so a token moved on one side can
- * quietly break the other. This reads the values straight out of globals.css,
- * so the comments in that file and this report cannot drift apart.
+ * and the `--d-*` set, which is both the dark bands on a light page and the
+ * whole page in dark mode — so a token moved on one side can quietly break the
+ * other. This reads the values straight out of globals.css, so the comments in
+ * that file and this report cannot drift apart.
+ *
+ * Three things here are structural rather than contrast checks, and they run
+ * first because each one is a way for the report itself to be wrong: the
+ * `:root` slice assertion, the dangling-`var()` lint, and the aura worst-pixel
+ * derivation, which every glass composite depends on.
  *
  *   pnpm contrast
- *   pnpm contrast '#4338ca' '#fbfbfd'   — one ad hoc pair
+ *   node scripts/contrast.mjs '#4338ca' '#fcfcfc'   — one ad hoc pair
+ *
+ * The ad hoc form has to be run through node directly: `pnpm` does not forward
+ * the arguments and will silently print the whole report instead.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -78,27 +87,63 @@ if (argA && argB) {
   process.exit(0);
 }
 
+// Hoisted: the structural checks below run before the ratio report and share
+// these counters, so a dangling token and a failing pair both reach the exit
+// code by the same route.
+let failures = 0;
+let missing = 0;
+
 /**
  * Only the plain hex tokens declared in `:root`; the rgb()/alpha steps are
- * composites, and anything set inside `[data-tone="inverse"]` is an alias.
+ * composites, and every declaration in the theme/band block further down is an
+ * alias onto one of these.
  *
- * Reading the whole file would be wrong, not merely noisy: the scoping block
- * reassigns light token names to dark values further down, so a flat scan ends
- * up measuring a light foreground against a dark background and reporting a
- * failure that does not exist. Both surface sets are declared in `:root` — the
- * dark one as `--d-*` — so one block holds everything worth measuring.
+ * Reading the whole file would be wrong, not merely noisy: that block reassigns
+ * light token names to dark values, so a flat scan ends up measuring a light
+ * foreground against a dark background and reporting a failure that does not
+ * exist. Both surface sets are declared in `:root` — the dark one as `--d-*` —
+ * so one block holds everything worth measuring.
+ *
+ * The parse is positional: find `:root {`, stop at the first `\n}`. That is
+ * fragile in one specific way, so it is asserted below rather than trusted —
+ * and it is the reason a block must never be nested inside `:root`. A nested
+ * `@media` or `@supports` would put a `\n}` inside the window and silently
+ * truncate the scan, and a silent truncation here means every row after it
+ * reports on a token the script never read.
  */
 function readTokens() {
   const css = readFileSync(join(root, "src/app/globals.css"), "utf8");
-  const rootBlock = css.slice(css.indexOf(":root {"));
+  const start = css.indexOf(":root {");
+  if (start < 0) {
+    console.log("FAIL  no `:root {` block found in globals.css");
+    process.exit(1);
+  }
+  const rootBlock = css.slice(start);
   const scoped = rootBlock.indexOf("\n}");
+  const window = rootBlock.slice(0, scoped);
   const raw = {};
-  for (const [, name, value] of rootBlock
-    .slice(0, scoped)
-    .matchAll(
-      /^\s*--([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8}|rgb\([^;]*?\)|var\(--[a-z0-9-]+\))\s*;/gm,
-    )) {
-    raw[name] = value;
+  // Whitespace inside `var(...)` is tolerated because prettier will wrap a
+  // declaration that runs long, and the scan must not depend on formatting:
+  // one reflowed line used to take eight tokens out of the report.
+  for (const [, name, value] of window.matchAll(
+    /^\s*--([a-z0-9-]+):\s*(#[0-9a-fA-F]{3,8}|rgb\([^;]*?\)|var\(\s*--[a-z0-9-]+\s*\))\s*;/gm,
+  )) {
+    raw[name] = value.replace(/\s+/g, " ");
+  }
+
+  // The window is the whole report's foundation, so prove it is the right one.
+  // Without this a shifted slice reads as a clean run on a palette it never
+  // looked at.
+  const sane =
+    raw["ground"] && raw["d-ground"] && Object.keys(raw).length >= 80;
+  if (!sane) {
+    console.log(
+      `FAIL  the :root slice looks wrong — ${Object.keys(raw).length} tokens, ` +
+        `--ground ${raw["ground"] ? "found" : "MISSING"}, ` +
+        `--d-ground ${raw["d-ground"] ? "found" : "MISSING"}.\n` +
+        `      Did a block get nested inside :root? See readTokens().`,
+    );
+    process.exit(1);
   }
 
   // A token may reference another rather than repeat its hex — `--focus` is
@@ -110,7 +155,7 @@ function readTokens() {
   for (const name of Object.keys(raw)) {
     let v = raw[name];
     for (let hops = 0; v?.startsWith("var(") && hops < 8; hops++) {
-      v = raw[v.slice(6, -1)];
+      v = raw[v.match(/var\(\s*--([a-z0-9-]+)\s*\)/)?.[1]];
     }
     if (v?.startsWith("#")) tokens[name] = v;
     else {
@@ -118,10 +163,56 @@ function readTokens() {
       if (rgba) alpha[name] = rgba;
     }
   }
-  return { tokens, alpha };
+  return { tokens, alpha, css };
 }
 
-const { tokens: t, alpha } = readTokens();
+const { tokens: t, alpha, css } = readTokens();
+
+/*
+ * Dangling `var()` references.
+ *
+ * Not a contrast check — a structural one, and it runs first because a
+ * reference to a token that does not exist is invalid at computed-value time
+ * and inherits instead, which looks like a working page.
+ *
+ * This exists because of a real bug: the band block carried
+ * `--aura-floor: var(--aura-cta-floor)` for several commits, and
+ * `--aura-cta-floor` was declared nowhere in the repo. It survived because the
+ * scan above reads only `:root` and structurally could not see it.
+ *
+ * The allowlist is for tokens that are genuinely declared elsewhere: by
+ * next/font on the <html> element, by the typography plugin, by an inline
+ * style a component sets, or by `@theme` itself.
+ */
+const EXTERNAL_TOKENS = [
+  /^font-inter$/, // next/font, set on <html>
+  /^tw-/, // @tailwindcss/typography
+  /^chip-(wash|ink)$/, // set inline by the `tints` map in card.tsx
+  /^color-/, // generated by @theme inline
+  /^(tab-size|spacing|container|text|font|leading|tracking|radius|shadow|inset-shadow|drop-shadow|blur|perspective|aspect|ease|animate|breakpoint|default)-/,
+];
+{
+  // Comments are stripped first. The note next to the deleted
+  // `--aura-cta-floor` line quotes it on purpose, so that nobody reintroduces
+  // it from memory, and a quotation is not a reference.
+  const live = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const declared = new Set(
+    [...live.matchAll(/^\s*--([a-z0-9-]+)\s*:/gm)].map((m) => m[1]),
+  );
+  const dangling = new Set();
+  for (const [, name] of live.matchAll(/var\(\s*--([a-z0-9-]+)/g)) {
+    if (declared.has(name)) continue;
+    if (EXTERNAL_TOKENS.some((re) => re.test(name))) continue;
+    dangling.add(name);
+  }
+  if (dangling.size) {
+    console.log("Dangling var() references — declared nowhere in globals.css");
+    for (const name of [...dangling].sort()) {
+      console.log(`  FAIL --${name}`);
+    }
+    failures += dangling.size;
+  }
+}
 
 /**
  * floor 4.5 — body text and any value a reader has to read (WCAG AA).
@@ -277,6 +368,15 @@ const checks = [
       ["ink-muted / sage-wash", "ink-muted", "tint-sage-wash", 4.5],
       ["ink-muted / amber-wash", "ink-muted", "tint-amber-wash", 4.5],
       ["ink-muted / violet-wash", "ink-muted", "tint-violet-wash", 4.5],
+      // `ink-faint`, not just `ink-muted`: evidence.tsx puts a
+      // `text-ink-faint` figure label directly on a wash. This row was absent
+      // and the five land within 0.02 of each other, which is the tell that
+      // the washes were luminance-matched for exactly this pair.
+      ["ink-faint / rose-wash", "ink-faint", "tint-rose-wash", 4.5],
+      ["ink-faint / teal-wash", "ink-faint", "tint-teal-wash", 4.5],
+      ["ink-faint / sage-wash", "ink-faint", "tint-sage-wash", 4.5],
+      ["ink-faint / amber-wash", "ink-faint", "tint-amber-wash", 4.5],
+      ["ink-faint / violet-wash", "ink-faint", "tint-violet-wash", 4.5],
     ],
   ],
   [
@@ -380,10 +480,69 @@ const checks = [
       ],
     ],
   ],
+  [
+    "Dark tints — ink on the dark ground",
+    [
+      ["rose-ink / d-ground", "d-tint-rose-ink", "d-ground", 4.5],
+      ["teal-ink / d-ground", "d-tint-teal-ink", "d-ground", 4.5],
+      ["sage-ink / d-ground", "d-tint-sage-ink", "d-ground", 4.5],
+      ["amber-ink / d-ground", "d-tint-amber-ink", "d-ground", 4.5],
+      ["violet-ink / d-ground", "d-tint-violet-ink", "d-ground", 4.5],
+    ],
+  ],
+  [
+    "Dark tints — ink on its own dark wash",
+    [
+      ["rose-ink / rose-wash", "d-tint-rose-ink", "d-tint-rose-wash", 4.5],
+      ["teal-ink / teal-wash", "d-tint-teal-ink", "d-tint-teal-wash", 4.5],
+      ["sage-ink / sage-wash", "d-tint-sage-ink", "d-tint-sage-wash", 4.5],
+      ["amber-ink / amber-wash", "d-tint-amber-ink", "d-tint-amber-wash", 4.5],
+      [
+        "violet-ink / violet-wash",
+        "d-tint-violet-ink",
+        "d-tint-violet-wash",
+        4.5,
+      ],
+    ],
+  ],
+  [
+    "Dark tints — ink on --d-surface, for a tinted cell on a dark card",
+    [
+      ["rose-ink / d-surface", "d-tint-rose-ink", "d-surface", 4.5],
+      ["teal-ink / d-surface", "d-tint-teal-ink", "d-surface", 4.5],
+      ["sage-ink / d-surface", "d-tint-sage-ink", "d-surface", 4.5],
+      ["amber-ink / d-surface", "d-tint-amber-ink", "d-surface", 4.5],
+      ["violet-ink / d-surface", "d-tint-violet-ink", "d-surface", 4.5],
+    ],
+  ],
+  [
+    "Dark tints — body copy still readable on every dark wash",
+    [
+      ["d-ink-muted / rose-wash", "d-ink-muted", "d-tint-rose-wash", 4.5],
+      ["d-ink-muted / teal-wash", "d-ink-muted", "d-tint-teal-wash", 4.5],
+      ["d-ink-muted / sage-wash", "d-ink-muted", "d-tint-sage-wash", 4.5],
+      ["d-ink-muted / amber-wash", "d-ink-muted", "d-tint-amber-wash", 4.5],
+      ["d-ink-muted / violet-wash", "d-ink-muted", "d-tint-violet-wash", 4.5],
+      ["d-ink-faint / rose-wash", "d-ink-faint", "d-tint-rose-wash", 4.5],
+      ["d-ink-faint / teal-wash", "d-ink-faint", "d-tint-teal-wash", 4.5],
+      ["d-ink-faint / sage-wash", "d-ink-faint", "d-tint-sage-wash", 4.5],
+      ["d-ink-faint / amber-wash", "d-ink-faint", "d-tint-amber-wash", 4.5],
+      ["d-ink-faint / violet-wash", "d-ink-faint", "d-tint-violet-wash", 4.5],
+    ],
+  ],
+  [
+    "Dark band tones — a tinted band as the whole surface",
+    [
+      ["d-ink / d-accent-wash", "d-ink", "d-accent-wash", 4.5],
+      ["d-ink-muted / d-accent-wash", "d-ink-muted", "d-accent-wash", 4.5],
+      ["d-ink-faint / d-accent-wash", "d-ink-faint", "d-accent-wash", 4.5],
+      ["d-accent / d-accent-wash", "d-accent", "d-accent-wash", 4.5],
+      ["d-ink / d-legacy-wash", "d-ink", "d-legacy-wash", 4.5],
+      ["d-ink-muted / d-legacy-wash", "d-ink-muted", "d-legacy-wash", 4.5],
+      ["d-ink-faint / d-legacy-wash", "d-ink-faint", "d-legacy-wash", 4.5],
+    ],
+  ],
 ];
-
-let failures = 0;
-let missing = 0;
 
 for (const [group, rows] of checks) {
   console.log(`\n${group}`);
@@ -433,6 +592,216 @@ for (const [group, rows] of checks) {
  * stop or a glass alpha and this fails before any contrast pair does, which is
  * the right order — every ratio above depends on these three being honest.
  */
+/*
+ * The auras' worst pixels, derived rather than remembered.
+ *
+ * `--aura-floor` and `--aura-cta-peak` were hand-measured constants with a
+ * comment saying so, and nothing in the toolchain re-derived them — so moving a
+ * gradient stop silently invalidated every glass composite and every row that
+ * sits on an aura. They are now computed here from the same stop values the
+ * stylesheet uses.
+ *
+ * The model is CSS's: for each layer, the normalized elliptical distance of a
+ * pixel from the layer's centre, where 1.0 is the ellipse edge; the ramp runs
+ * from the colour at 0% to transparent at the declared stop, interpolated in
+ * premultiplied alpha, which is why the RGB stays constant and only the alpha
+ * falls off; then source-over, bottom layer first, over the base colour. The
+ * first listed background-image is on top, so the list is composited in
+ * reverse.
+ *
+ * Why several aspect ratios: the worst pixel is a function of how much the
+ * layers overlap, and overlap is geometry. One ratio is not a measurement.
+ *
+ * The geometries are duplicated from globals.css, which is a real duplication
+ * and the reason each entry names the rule it mirrors. Parsing the gradients
+ * out of the stylesheet would couple this to the exact formatting of a
+ * `radial-gradient()` and buy very little: a stop change that is not mirrored
+ * here fails loudly below, because the derived value stops matching the
+ * declared token.
+ */
+const AURA_STOPS = {
+  // :root --aura-dark-1..3 — shared by .aura-cta, .aura-quote and the dark hero
+  dark: [
+    { color: [67, 56, 202], a: 0.46 },
+    { color: [124, 58, 237], a: 0.3 },
+    { color: [8, 145, 178], a: 0.26 },
+  ],
+  // .aura-hero's own stops, on light
+  light: [
+    { color: [79, 70, 229], a: 0.46 },
+    { color: [6, 182, 212], a: 0.44 },
+    { color: [168, 85, 247], a: 0.39 },
+  ],
+};
+
+const AURA_GEOM = {
+  // .aura-hero
+  hero: [
+    { rx: 0.62, ry: 0.58, cx: 0.12, cy: 0.16, stop: 0.7 },
+    { rx: 0.56, ry: 0.52, cx: 0.9, cy: 0.1, stop: 0.7 },
+    { rx: 0.68, ry: 0.62, cx: 0.66, cy: 1.0, stop: 0.72 },
+  ],
+  // .aura-cta
+  cta: [
+    { rx: 0.75, ry: 1.2, cx: 0.1, cy: 0.0, stop: 0.6 },
+    { rx: 0.6, ry: 1.0, cx: 0.96, cy: 1.08, stop: 0.62 },
+    { rx: 0.7, ry: 0.9, cx: 0.7, cy: 0.2, stop: 0.64 },
+  ],
+  // .aura-quote — the same stops as .aura-cta, different ellipses
+  quote: [
+    { rx: 0.55, ry: 1.3, cx: 0.82, cy: 0.08, stop: 0.6 },
+    { rx: 0.5, ry: 1.2, cx: 0.12, cy: 0.96, stop: 0.62 },
+    { rx: 0.6, ry: 1.0, cx: 0.4, cy: 0.3, stop: 0.64 },
+  ],
+};
+
+/** The darkest and brightest pixel of a gradient stack at one box size. */
+function auraExtremes(baseHex, geom, stops, W, H, N = 240) {
+  const b = baseHex.replace("#", "");
+  const base = [0, 2, 4].map((i) => parseInt(b.slice(i, i + 2), 16));
+  const layers = geom.map((g, i) => ({ ...g, ...stops[i] }));
+  let lo = null;
+  let hi = null;
+  for (let iy = 0; iy < N; iy++) {
+    const py = ((iy + 0.5) / N) * H;
+    for (let ix = 0; ix < N; ix++) {
+      const px = ((ix + 0.5) / N) * W;
+      let [r, g, bl] = base;
+      for (let k = layers.length - 1; k >= 0; k--) {
+        const L = layers[k];
+        const d = Math.hypot(
+          (px - L.cx * W) / (L.rx * W),
+          (py - L.cy * H) / (L.ry * H),
+        );
+        if (d >= L.stop) continue;
+        const a = L.a * (1 - d / L.stop);
+        r = L.color[0] * a + r * (1 - a);
+        g = L.color[1] * a + g * (1 - a);
+        bl = L.color[2] * a + bl * (1 - a);
+      }
+      const Y = luminance(hex(r, g, bl));
+      if (lo === null || Y < lo.Y) lo = { Y, value: hex(r, g, bl) };
+      if (hi === null || Y > hi.Y) hi = { Y, value: hex(r, g, bl) };
+    }
+  }
+  return { darkest: lo.value, brightest: hi.value };
+}
+
+/** The worst pixel across several aspect ratios, in the direction that matters. */
+function auraWorst(baseHex, geom, stops, sizes, which) {
+  let worst = null;
+  for (const [W, H] of sizes) {
+    const v = auraExtremes(baseHex, geom, stops, W, H)[which];
+    if (worst === null) worst = v;
+    else {
+      const better =
+        which === "darkest"
+          ? luminance(v) < luminance(worst)
+          : luminance(v) > luminance(worst);
+      if (better) worst = v;
+    }
+  }
+  return worst;
+}
+
+const HERO_SIZES = [
+  [560, 352],
+  [480, 352],
+  [640, 400],
+  [360, 420],
+];
+const BAND_SIZES = [
+  [1200, 420],
+  [1100, 520],
+  [700, 700],
+  [380, 760],
+];
+
+/*
+ * Each row: the token, the rule it comes from, and which end of the gradient is
+ * the worst case for the text that sits on it.
+ *
+ * The two go in opposite directions on purpose. Dark text on the light hero
+ * aura is worst at its DARKEST pixel; light text on the dark bands is worst at
+ * their BRIGHTEST. One shared "floor" token would have been wrong in one of the
+ * two places, and silently.
+ *
+ * `.aura-quote` and the dark hero are measured too, and are expected to land on
+ * `--aura-cta-peak`. They are not given tokens of their own because they do not
+ * need them — but they are checked, because that is the fact the shared peak
+ * rests on, and it is a measured fact rather than a consequence of sharing
+ * stops. (It holds because the peak is the third stop's own centre, at a point
+ * the other two layers no longer reach. The hero's stop ends are wider —
+ * 70/70/72% against 60/62/64% — and it still holds.)
+ */
+const auras = [
+  [
+    "aura-floor",
+    "aura-hero (light)",
+    "#eef0fd",
+    "hero",
+    "light",
+    HERO_SIZES,
+    "darkest",
+  ],
+  [
+    "aura-cta-peak",
+    "aura-cta",
+    "aura-dark-base",
+    "cta",
+    "dark",
+    BAND_SIZES,
+    "brightest",
+  ],
+  [
+    "aura-cta-peak",
+    "aura-quote",
+    "aura-dark-base",
+    "quote",
+    "dark",
+    BAND_SIZES,
+    "brightest",
+  ],
+  [
+    "aura-cta-peak",
+    "aura-hero (dark theme)",
+    "aura-dark-base",
+    "hero",
+    "dark",
+    HERO_SIZES,
+    "brightest",
+  ],
+];
+
+console.log("\nAuras — worst pixel, rendered and sampled rather than recalled");
+for (const [token, rule, base, geom, stops, sizes, which] of auras) {
+  const baseHex = base.startsWith("#") ? base : t[base];
+  if (!baseHex || !t[token]) {
+    missing++;
+    console.log(`  ??   ${rule.padEnd(42)} missing token`);
+    continue;
+  }
+  const got = auraWorst(
+    baseHex,
+    AURA_GEOM[geom],
+    AURA_STOPS[stops],
+    sizes,
+    which,
+  );
+  // One step per channel of rounding slack, as with the glass composites.
+  const off = [0, 2, 4].some(
+    (i) =>
+      Math.abs(
+        parseInt(got.slice(i + 1, i + 3), 16) -
+          parseInt(t[token].slice(i + 1, i + 3), 16),
+      ) > 1,
+  );
+  if (off) failures++;
+  console.log(
+    `  ${off ? "FAIL" : "ok  "} ${`${rule} ${which}`.padEnd(42)} ${got}   declared --${token} ${t[token]}`,
+  );
+}
+
 const derived = [
   ["glass-solid", "glass", "aura-floor"],
   ["glass-strong-solid", "glass-strong", "aura-floor"],
@@ -495,21 +864,30 @@ function rampMin(from, to, bg, steps = 20) {
   return { min, at };
 }
 
+// One ramp per surface set. The dark one exists because `.text-gradient` is
+// `--accent` to `--grad-end`, and the theme block reassigns both.
+const ramps = [
+  ["accent", "grad-end", ["ground", "surface-2"]],
+  ["d-accent", "d-grad-end", ["d-ground", "d-surface-2"]],
+];
+
 console.log("\nGradient headline — sampled along the ramp, not just its ends");
-for (const bg of ["ground", "surface-2"]) {
-  if (!t["accent"] || !t["grad-end"] || !t[bg]) {
-    missing++;
-    console.log(`  ??   accent -> grad-end / ${bg.padEnd(30)} missing token`);
-    continue;
+for (const [from, to, grounds] of ramps) {
+  for (const bg of grounds) {
+    if (!t[from] || !t[to] || !t[bg]) {
+      missing++;
+      console.log(`  ??   ${from} -> ${to} / ${bg.padEnd(24)} missing token`);
+      continue;
+    }
+    const { min, at } = rampMin(t[from], t[to], t[bg]);
+    const ok = min >= 4.5;
+    if (!ok) failures++;
+    console.log(
+      `  ${ok ? "ok  " : "FAIL"} ${`${from} -> ${to} / ${bg}`.padEnd(42)} ${min
+        .toFixed(2)
+        .padStart(6)}:1   floor 4.5  (worst at t=${at.toFixed(2)})`,
+    );
   }
-  const { min, at } = rampMin(t["accent"], t["grad-end"], t[bg]);
-  const ok = min >= 4.5;
-  if (!ok) failures++;
-  console.log(
-    `  ${ok ? "ok  " : "FAIL"} ${`accent -> grad-end / ${bg}`.padEnd(42)} ${min
-      .toFixed(2)
-      .padStart(6)}:1   floor 4.5  (worst at t=${at.toFixed(2)})`,
-  );
 }
 
 /*
@@ -537,6 +915,93 @@ console.log(
   `Source pole vs --ink-faint:            ${poleVsFaint.toFixed(2)}:1 - hue-separated, confirm visually`,
 );
 
+/*
+ * The same rule relaxes on the dark set: `--d-ink-faint` over the dark glass
+ * composite clears 4.5, where the light pair does not. Reported rather than
+ * acted on — the rule in globals.css stays as written, because a rule that
+ * holds on one surface set and not the other is a rule nobody will remember
+ * correctly.
+ */
+console.log(
+  `d-ink-faint on dark glass:             ${ratio(
+    t["d-ink-faint"],
+    t["glass-dark-solid"],
+  ).toFixed(2)}:1 - clears 4.5, but the single rule stands`,
+);
+
+/*
+ * The nav island is `.glass-strong`, and on a dark page its backdrop is
+ * whatever scrolls under it. The brightest thing that can is the primary
+ * control's gradient peak, so that is the worst case for the nav labels.
+ */
+if (alpha["glass-dark"] && t["d-accent-fill-peak"]) {
+  const underIsland = composite(alpha["glass-dark"], t["d-accent-fill-peak"]);
+  console.log(
+    `Nav labels over the brightest backdrop: ${ratio(
+      t["d-ink"],
+      underIsland,
+    ).toFixed(2)}:1 - d-ink on ${underIsland}`,
+  );
+}
+
+/*
+ * A decorative tint that lands on a semantic pole.
+ *
+ * Reported, not failed, and deliberately so. `--tint-amber-ink` is
+ * byte-identical to `--warn` today, and `--d-tint-amber-ink` is within 1.02:1
+ * of `--d-warn` — the tints block warns about exactly this, so the collision
+ * should be visible every run, but failing the build on a condition that is
+ * already true would just mean the build is always red. Fixing it means moving
+ * the amber hue in both sets, which is its own decision.
+ *
+ * Weight alone is not the test: two colours can sit at the same luminance and
+ * read as completely different hues, which is the whole basis of the two poles
+ * being separated by hue rather than by ratio. So hue has to agree too.
+ */
+function hue(value) {
+  const h = value.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (max === min) return 0;
+  const d = max - min;
+  const deg =
+    max === r
+      ? ((g - b) / d) % 6
+      : max === g
+        ? (b - r) / d + 2
+        : (r - g) / d + 4;
+  return (((deg * 60) % 360) + 360) % 360;
+}
+
+const poles = ["accent", "legacy", "positive", "warn"];
+const collisions = [];
+for (const set of ["", "d-"]) {
+  for (const h of ["rose", "teal", "sage", "amber", "violet"]) {
+    const ink = t[`${set}tint-${h}-ink`];
+    if (!ink) continue;
+    for (const pole of poles) {
+      const pv = t[`${set}${pole}`];
+      if (!pv) continue;
+      const dh = Math.abs(hue(ink) - hue(pv));
+      if (ratio(ink, pv) <= 1.05 && Math.min(dh, 360 - dh) <= 10) {
+        collisions.push(
+          `--${set}tint-${h}-ink and --${set}${pole} are the same colour ` +
+            `(${ratio(ink, pv).toFixed(2)}:1, ${Math.min(dh, 360 - dh).toFixed(0)}° apart)`,
+        );
+      }
+    }
+  }
+}
+console.log(
+  `\nDecorative tints clear of the poles:   ${
+    collisions.length
+      ? `${collisions.length} collision(s), known and deferred`
+      : "ok"
+  }`,
+);
+for (const c of collisions) console.log(`  !    ${c}`);
+
 /**
  * The theme-color meta tag is the one place a token has to exist as a literal
  * hex in TypeScript: the browser reads it before any stylesheet, so it cannot
@@ -544,17 +1009,23 @@ console.log(
  * are exactly what the indirection note above is about, so rather than trust
  * the comment next to it, check it.
  */
-const groundHex = readFileSync(join(root, "src/lib/seo.ts"), "utf8").match(
-  /GROUND_HEX\s*=\s*"(#[0-9a-fA-F]{3,8})"/,
-);
-if (!groundHex) {
-  console.log(`\nGROUND_HEX not found in src/lib/seo.ts`);
-  failures++;
-} else {
-  const matches = groundHex[1].toLowerCase() === t["ground"].toLowerCase();
+const seo = readFileSync(join(root, "src/lib/seo.ts"), "utf8");
+for (const [constant, token] of [
+  ["GROUND_HEX", "ground"],
+  ["GROUND_HEX_DARK", "d-ground"],
+]) {
+  const found = seo.match(
+    new RegExp(`${constant}\\s*=\\s*"(#[0-9a-fA-F]{3,8})"`),
+  );
+  if (!found) {
+    console.log(`\n${constant} not found in src/lib/seo.ts`);
+    failures++;
+    continue;
+  }
+  const matches = found[1].toLowerCase() === t[token].toLowerCase();
   console.log(
-    `GROUND_HEX vs --ground:                ${groundHex[1]} ${
-      matches ? "ok" : `FAIL - --ground is ${t["ground"]}`
+    `${`${constant} vs --${token}:`.padEnd(38)} ${found[1]} ${
+      matches ? "ok" : `FAIL - --${token} is ${t[token]}`
     }`,
   );
   if (!matches) failures++;

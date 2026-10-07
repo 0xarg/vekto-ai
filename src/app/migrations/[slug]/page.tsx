@@ -11,7 +11,7 @@ import { Pending } from "@/components/ui/pending";
 import { PendingSection } from "@/components/ui/pending-section";
 import { Readout } from "@/components/ui/label";
 import { PlatformPole } from "@/components/sections/migration-ledger";
-import { PipelineStrip } from "@/components/sections/pipeline-strip";
+import { PipelineFlow } from "@/components/diagrams/pipeline-flow";
 import { CtaBand } from "@/components/sections/cta-band";
 import { stageIndex } from "@/lib/derived";
 
@@ -86,7 +86,11 @@ export default async function MigrationPage({ params }: Params) {
         </div>
       </PageHeader>
 
-      <PipelineStrip />
+      {/* The same pipeline the homepage and /platform render, from the same
+          registry. */}
+      <Section bordered={false} density="tight">
+        <PipelineFlow variant="overview" />
+      </Section>
 
       {migration.status === "draft" && (
         <Section bordered={false} density="tight">

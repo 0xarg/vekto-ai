@@ -8,6 +8,21 @@ bestFit: "Teams whose integration estate has grown into a mesh of point-to-point
 relatedMigrations: ["tibco-to-azure-logic-apps"]
 ---
 
+<Summary>
+
+- **The problem:** two generations of integration — SOAP services and
+  point-to-point connections — that both work and neither of which is consumable
+  by anyone who did not build them.
+- **Best fit:** a mesh of point-to-point connections nobody can safely change,
+  where contract-first APIs are the goal.
+- **The work** is deciding what the contracts should be, not translating
+  protocols. A mechanical SOAP-to-REST conversion exposes the same internals
+  through a newer shape.
+- **The constraint:** an API layer inherits the constraints of the backend
+  underneath it.
+
+</Summary>
+
 Most estates of any age contain two generations of integration: SOAP services
 written when that was the standard, and point-to-point connections added later
 because they were faster than going through governance.
@@ -28,8 +43,10 @@ endpoints that still expose the internals of the system behind them.
 4. **Put governance in place** — access control, rate limits, monitoring — so the
    new estate does not decay into the old one.
 
-## What this does not solve
+<Limits>
 
 An API layer over an unchanged backend inherits that backend's constraints. If
 the underlying system cannot answer a question quickly, wrapping it in a modern
 interface does not change that.
+
+</Limits>

@@ -8,6 +8,7 @@ import { cta, primaryNav, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
+import { ThemeToggle } from "./theme-toggle";
 import { Wordmark } from "./wordmark";
 
 const SHEET_ID = "site-menu";
@@ -258,6 +259,14 @@ export function SiteHeader() {
               {cta.primary.label}
             </ButtonLink>
           </div>
+
+          {/* Its own element rather than part of the cluster above, because
+              that cluster starts at `lg` and the theme is not a desktop
+              feature. `h-9` rather than the trigger's 44px box next to it: at
+              320px the island already carries a wordmark and a hamburger, and
+              this is the one surface on the site with a fixed height that
+              nothing may spill out of. */}
+          <ThemeToggle className="-mr-1 ml-auto lg:mr-0 lg:ml-0" />
 
           {/* ---------------- Mobile trigger ---------------- */}
           <button

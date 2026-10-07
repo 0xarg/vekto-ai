@@ -5,6 +5,7 @@ import { agents, getAgent } from "@/content/agents";
 import { buildMetadata } from "@/lib/seo";
 import { adjacentAgents, stageIndex } from "@/lib/derived";
 import { cn } from "@/lib/utils";
+import { PipelineFlow } from "@/components/diagrams/pipeline-flow";
 import { PageHeader } from "@/components/sections/page-header";
 import { Section } from "@/components/ui/section";
 import { Container } from "@/components/ui/container";
@@ -110,33 +111,18 @@ export default async function AgentPage({ params }: Params) {
 
       {/* Position rail. The marked cell is this stage, derived from `step`, so
           each of the five pages carries a visibly different mark — which is
-          also what stops them reading as near-duplicates to a crawler. */}
-      <nav aria-label="Pipeline stages" className="border-rule border-b">
-        <Container width="wide" bleed>
-          <ol className="divide-rule flex divide-x">
-            {agents.map((a) => {
-              const current = a.step === agent.step;
-              return (
-                <li key={a.slug} className="flex-1">
-                  <Link
-                    href={`/agents/${a.slug}`}
-                    aria-current={current ? "page" : undefined}
-                    className={cn(
-                      "text-label block px-2 py-4 text-center font-mono transition-colors sm:py-3.5",
-                      current
-                        ? "bg-accent text-accent-ink"
-                        : "text-ink-faint hover:bg-surface hover:text-ink",
-                    )}
-                  >
-                    <span className="sr-only">{a.name}, stage </span>
-                    {stageIndex(a.step)}
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+          also what stops them reading as near-duplicates to a crawler.
+
+          This was a bespoke five-cell nav, the third rendering of the same five
+          registry agents on the site. It is the shared pipeline now, in its
+          compact form. */}
+      <div className="border-rule border-b">
+        <Container width="wide">
+          <div className="py-4">
+            <PipelineFlow variant="position" current={agent.step - 1} />
+          </div>
         </Container>
-      </nav>
+      </div>
 
       <Section bordered={false} density="loose">
         <div className="lattice sm:grid-cols-2">

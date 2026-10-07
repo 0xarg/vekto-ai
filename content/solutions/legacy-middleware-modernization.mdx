@@ -8,6 +8,19 @@ bestFit: "Organizations running a large estate on a platform with a support dead
 relatedMigrations: ["tibco-to-azure-logic-apps"]
 ---
 
+<Summary>
+
+- **Starts with** an end-of-support date, a license renewal, or the departure of
+  the last engineer who understood the estate.
+- **Best fit:** a large estate on a platform with a support deadline attached,
+  where a hand migration would take longer than the deadline allows.
+- **The sequence:** establish what exists, move behavior before changing it,
+  retire the old platform deliberately.
+- **The constraint:** redesigning while migrating turns one hard problem into
+  two, and makes it impossible to tell which one caused a fault.
+
+</Summary>
+
 Middleware modernization is rarely a technology decision. It starts when a
 vendor announces an end-of-support date, a license renewal arrives at a number
 nobody wants to sign, or the last engineer who understood the estate leaves.
@@ -38,9 +51,11 @@ market, in source control, reviewable through the same process as the rest of
 your code. That is a different operating model from a proprietary ESB where
 change requests queue behind a small number of specialists.
 
-## What this does not solve
+<Limits>
 
 Modernization does not fix integration designs that were wrong to begin with. A
 poorly bounded integration moved onto a modern platform is a poorly bounded
 integration with better tooling around it. Redesign is a separate program, and
 it is easier once the first one is finished.
+
+</Limits>

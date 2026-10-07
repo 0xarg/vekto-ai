@@ -1,4 +1,5 @@
 import type { Agent } from "@/content/agents";
+import { Svg, stroke } from "./svg";
 
 /**
  * One diagram per pipeline stage.
@@ -19,33 +20,6 @@ import type { Agent } from "@/content/agents";
  * a source (non-negotiable #6). Colour is `currentColor` except where the
  * source/target poles are the actual subject.
  */
-
-const stroke = {
-  fill: "none",
-  strokeWidth: 1.5,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-} as const;
-
-function Svg({
-  children,
-  label,
-}: {
-  children: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <svg
-      className="diagram"
-      viewBox="0 0 180 110"
-      preserveAspectRatio="xMidYMid meet"
-      role="img"
-      aria-label={label}
-    >
-      {children}
-    </svg>
-  );
-}
 
 /** Discovery — a dependency graph, with the orphans it also turns up. */
 function Discovery() {

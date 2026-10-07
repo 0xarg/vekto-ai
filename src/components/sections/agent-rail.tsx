@@ -7,33 +7,38 @@ import { stageIndex } from "@/lib/derived";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { AgentDiagram } from "@/components/diagrams/agent-diagram";
+import { PipelineFlow } from "@/components/diagrams/pipeline-flow";
 
 /**
- * The five stages as a pinned rail: the list sticks on the left while each
- * stage's panel passes on the right.
+ * The five stages as a pinned rail: the pipeline sticks on the left, marking
+ * where you are, while each stage's panel passes on the right.
  *
- * This replaces a five-card bento whose five graphic zones were identical,
- * because `inputs.length` is 2 and `outputs.length` is 3 for every agent in the
- * registry. The rail gives each stage room for its own diagram, which is the
- * actual difference.
+ * On the motion rule, which shapes most of what follows. Nothing here is gated
+ * on scroll. Every stage's heading, copy, diagram and ledger is in the
+ * server-rendered HTML and visible on arrival; `position: sticky` moves an
+ * element that is already painted, and the one IntersectionObserver below only
+ * marks which stage is current. With JavaScript off every stage still reads and
+ * the rail simply stops following. That is the line: an observer may decorate,
+ * it may not gate.
  *
- * On the motion rule: nothing here is gated on scroll. Every stage's heading,
- * copy, diagram and ledger is in the server-rendered HTML and visible on
- * arrival — `position: sticky` moves an element that is already painted. The one
- * IntersectionObserver below sets which rail item is marked current. It reveals
- * nothing; with JavaScript off, every stage still reads and the rail simply
- * stops highlighting. That is the line: an observer may decorate, it may not
- * gate content.
+ * Which is also why the pinned panel holds the *pipeline* and not the current
+ * stage's own diagram. A panel that swapped in stage N's diagram would have
+ * four of the five hidden at any moment, and with JavaScript off only the first
+ * would ever render — "invisible until you scroll", which is exactly the test
+ * non-negotiable #2 sets and exactly the bug this rebuild exists to fix. So
+ * each `AgentDiagram` stays inside its own panel, and the pinned rail marks
+ * position on a shape that asserts only the ordering.
  *
- * Below `lg` the rail unpins and the stages stack. A sticky rail on a phone eats
- * the viewport it is supposed to be orienting you within.
+ * Below `lg` the rail unpins and the stages stack. A sticky rail on a phone
+ * eats the viewport it is supposed to be orienting you within.
  */
 export function AgentRail() {
   const [current, setCurrent] = useState(0);
   const panels = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
-    // Only the marking. A panel that never intersects still rendered.
+    // Only the marking, and only ever forward into `drawn`. A panel that never
+    // intersects still rendered, and its diagram is already finished.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -52,49 +57,19 @@ export function AgentRail() {
   }, []);
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-16">
-      {/* ---------------- The rail ---------------- */}
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:gap-16">
+      {/* ---------------- The pinned pipeline ---------------- */}
       <div className="hidden lg:block">
         <div className="sticky top-[var(--spacing-anchor)]">
           <Label className="mb-5">In sequence</Label>
-          <ol className="border-rule border-l">
-            {agents.map((agent, i) => {
-              const active = i === current;
-              return (
-                <li key={agent.slug} className="relative">
-                  {/* The current mark. A 2px rule against the hairline the list
-                      already sits on, so nothing moves when it changes. */}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute top-0 -left-px h-full w-0.5 transition-colors duration-300",
-                      active ? "bg-accent" : "bg-transparent",
-                    )}
-                  />
-                  <Link
-                    href={`/agents/${agent.slug}`}
-                    aria-current={active ? "step" : undefined}
-                    className={cn(
-                      "group flex items-baseline gap-3 py-3 pl-5 transition-colors duration-200",
-                      active ? "text-ink" : "text-ink-muted hover:text-ink",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "font-mono text-sm transition-colors duration-200",
-                        active ? "text-accent" : "text-ink-faint",
-                      )}
-                    >
-                      {stageIndex(agent.step)}
-                    </span>
-                    <span className="font-display text-lg font-semibold">
-                      {agent.name}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+          <PipelineFlow variant="rail" current={current} />
+
+          {/* The current stage's role, restated under the rail. This is the
+              one place the pinned panel carries words, and they are a copy of
+              what the panel beside it already says — nothing is only here. */}
+          <p className="text-ink-muted border-rule mt-6 border-t pt-5 text-xs leading-relaxed">
+            {agents[current]?.role}
+          </p>
         </div>
       </div>
 
@@ -106,7 +81,10 @@ export function AgentRail() {
             ref={(el) => {
               panels.current[i] = el;
             }}
-            className="border-rule bg-surface shadow-card overflow-hidden rounded-lg border"
+            className={cn(
+              "border-rule bg-surface shadow-card overflow-hidden rounded-lg border transition-colors duration-300",
+              i === current && "border-accent-line",
+            )}
           >
             <div className="grid sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
               <div className="p-5 sm:p-7">

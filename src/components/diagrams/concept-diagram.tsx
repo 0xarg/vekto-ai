@@ -12,33 +12,7 @@
  * The agent diagrams in `agent-diagram.tsx` are the opposite case: their shape
  * comes from the registry, so they are allowed to look like data.
  */
-
-const stroke = {
-  fill: "none",
-  strokeWidth: 1.5,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-} as const;
-
-function Svg({
-  children,
-  label,
-}: {
-  children: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <svg
-      className="diagram"
-      viewBox="0 0 180 110"
-      preserveAspectRatio="xMidYMid meet"
-      role="img"
-      aria-label={label}
-    >
-      {children}
-    </svg>
-  );
-}
+import { Svg, stroke } from "./svg";
 
 /**
  * Manual rewrites do not finish. A track of segments, partly done, running off

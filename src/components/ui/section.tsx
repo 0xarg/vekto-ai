@@ -49,7 +49,7 @@ export function Section({
    * Hairline top border, on by default.
    *
    * Within a run of light bands the rule is still the separator: the ground and
-   * surface steps measure 1.073:1 apart and cannot separate anything by
+   * surface steps measure 1.07:1 apart and cannot separate anything by
    * themselves. Across a light-to-dark change it is redundant — those bands sit
    * ~18.6:1 apart — so pass `bordered={false}` where a dark band meets a light
    * one, and where two dark bands are meant to read as a single field.

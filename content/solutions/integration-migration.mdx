@@ -8,6 +8,20 @@ bestFit: "Teams who have already chosen a target platform and need the existing 
 relatedMigrations: ["tibco-to-azure-logic-apps"]
 ---
 
+<Summary>
+
+- **The approach:** move what exists, preserve what it does, change nothing else
+  until it runs.
+- **Best fit:** the target platform is already chosen and the estate needs
+  moving predictably, with differences made explicit rather than found in
+  production.
+- **Why it pays off:** when behavior preservation is the goal, any difference
+  between old and new is a defect with an obvious owner.
+- **The trade:** the estate is reproduced including the parts you would rather
+  not have — but you leave knowing precisely what those are.
+
+</Summary>
+
 The most disciplined version of a migration is also the least glamorous: move
 what exists, preserve what it does, and change nothing else until it runs.
 
@@ -26,9 +40,11 @@ investigating before anyone can say whether it was intended.
    ranked rather than discovered later.
 5. **Handover** with the record of how each artifact was treated.
 
-## What this does not solve
+<Limits>
 
 Like-for-like migration reproduces the estate you have, including the parts you
 would rather not have. That is the point — but it means the backlog of things
 worth improving survives the move. Knowing precisely what is in that backlog,
 which the inventory gives you, is usually the more valuable outcome.
+
+</Limits>

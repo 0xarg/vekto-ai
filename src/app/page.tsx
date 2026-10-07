@@ -17,6 +17,7 @@ import { Hero } from "@/components/sections/hero";
 import { CodeTransform } from "@/components/sections/code-transform";
 import { PlatformStrip } from "@/components/sections/platform-strip";
 import { AgentRail } from "@/components/sections/agent-rail";
+import { PipelineFlow } from "@/components/diagrams/pipeline-flow";
 import { CoverageMatrix } from "@/components/sections/coverage-matrix";
 import { MigrationLedger } from "@/components/sections/migration-ledger";
 import { Evidence } from "@/components/sections/evidence";
@@ -125,11 +126,17 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* The five stages as a pinned rail. This was a five-card bento whose five
-          graphic zones were identical — `inputs.length` is 2 and
-          `outputs.length` is 3 for every agent in the registry, so a graphic
-          keyed on those counts draws the same shape five times. Each stage now
-          has its own diagram and the room to show it. */}
+      {/* The five stages twice over, at two altitudes.
+
+          The pipeline comes first and answers the whole question in one shape:
+          five stages, in order, what each reads and produces. It draws itself
+          on load and a pulse runs it. Then the rail below gives each stage the
+          room for its own diagram and its own ledger.
+
+          Neither gates anything on scroll. The overview is finished before you
+          reach it and the rail's panels are all in the HTML — see the note in
+          agent-rail.tsx for why the pinned panel holds the pipeline rather than
+          the current stage's diagram. */}
       <Section
         density="loose"
         align="center"
@@ -142,6 +149,7 @@ export default function HomePage() {
         }
         lede="Each stage reads what the one before it produced. Nothing is changed until Transformation, and nothing is declared finished until Validation has compared it against the original."
       >
+        <PipelineFlow variant="overview" className="mb-14 sm:mb-20" />
         <AgentRail />
       </Section>
 

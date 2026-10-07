@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Key the `dark:` variant to our own attribute rather than to the OS. Without
+   this, Tailwind v4's default maps `dark:` to `prefers-color-scheme`, and any
+   utility written with it would quietly contradict the one rule the theme has:
+   light is what everyone gets until they ask for dark. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ---------------------------------------------------------------------------
    Design tokens — cool glass over two chromatic auras.
 
@@ -8,11 +14,20 @@
    resolves through these variables, so a re-theme is this block, not the
    components.
 
-   The site runs two surface sets. Light is the ground the page is written on;
-   the near-black set is punctuation — the code panel's interior, the pull quote
-   and the closing CTA. It is declared as `--d-*` and swapped in wholesale by the
-   `[data-tone="inverse"]` block below, so a component never has to know which
-   band it is sitting on.
+   The site runs two surface sets, and the near-black one now has two jobs.
+
+   On a light page it is punctuation — the code panel's interior, the pipeline
+   strip, the pull quote and the closing CTA. That was its only job once, and
+   the note here used to say so and name three places. It is now also the whole
+   page when the reader has asked for dark.
+
+   Both jobs are served by the same `--d-*` values and, below, by the same
+   declaration list under two selectors: `:root[data-theme="dark"]` for the
+   page and `[data-tone="inverse"]` for a band. Sharing it is not brevity. An
+   inverse band sitting inside a dark page has to be an exact no-op, and if the
+   two lists could drift by even one declaration, that band would behave
+   differently on a dark page than on a light one — a difference nothing would
+   catch, because both look plausible.
 
    A third set sits on top of both: the glass surfaces. Those are translucent,
    which means they cannot be contrast-checked on their own — a ratio needs two
@@ -25,28 +40,59 @@
    the foregrounds that sit on it. There is a script for this — see AGENTS.md.
    --------------------------------------------------------------------------- */
 :root {
-  /* Surfaces — a near-neutral white scale with a faint cool cast. The previous
-     warm paper scale (ivory #faf9f5, cream #f0eee6) was chosen for Anthropic's
-     clay; the cream band in particular read as visibly yellow, and warm
-     off-white is the most common ground on the web. Cool white is what makes
-     the glass above it look like glass rather than like fogged paper. */
-  --ground: #fbfbfd;
+  /* Declared here rather than in `viewport` in layout.tsx, which is where it
+     used to live. As a viewport key it resolves against the OS preference, so
+     it would hand a reader on OS-dark the dark scrollbars and form controls
+     while the page itself was still light. Here it tracks the attribute we
+     actually set. */
+  color-scheme: light;
+
+  /* Surfaces — a neutral white scale. Two scales preceded this one. The warm
+     paper scale (ivory #faf9f5, cream #f0eee6) was chosen for Anthropic's clay
+     and read as visibly yellow. The cool scale that replaced it (#fbfbfd,
+     #f3f4f8) was argued for on the grounds that "cool white is what makes the
+     glass above it look like glass rather than like fogged paper" — and the
+     client rejected it on sight as bluish.
+
+     Both halves of that argument survive here. The chroma that makes the glass
+     read as glass lives in the auras underneath it, which are unchanged and
+     are the thing actually being frosted; the ground itself does not need a
+     cast to do that job. So the grounds are neutral and the auras stay
+     saturated. */
+  --ground: #fcfcfc;
   --surface: #ffffff;
-  --surface-2: #f3f4f8;
+  --surface-2: #f4f4f5;
 
   /* Hairlines. Still the primary structural device — this direction borrows
      Auraform's surfaces, not its complete absence of borders, because the
-     `.lattice` grids and the coverage matrix are built out of rules. */
-  --rule: #dfe2eb; /* 1.25:1 off --ground */
-  --rule-strong: #cfd3e0; /* 1.45:1 */
+     `.lattice` grids and the coverage matrix are built out of rules.
 
-  /* Text */
-  --ink: #171920; /* 16.98:1 on --ground */
-  --ink-muted: #51576b; /* 6.95 ground / 7.18 surface / 6.53 surface-2 */
+     These are neutral for the same reason the grounds are. At 12 and 17 steps
+     of blue they were the bluest thing on the page, and against a neutral
+     ground they would have been the only thing left carrying the cast — the
+     complaint restated rather than answered. */
+  --rule: #e4e4e7; /* 1.24:1 off --ground */
+  --rule-strong: #d4d4d8; /* 1.44:1 */
+
+  /* Text.
+
+     The three `-base` tokens hold the values; `--ink` and friends reference
+     them. The indirection is not cosmetic. On a dark surface "inverse ink"
+     means the light set's ink, so `--ink-inverse*` in the theme block below
+     has to point back at exactly these three values — and it used to do that
+     by repeating the hexes, which is the duplicated-hex failure the `--focus`
+     note further down was written about. One value, two names, no drift. */
+  --ink-base: #171920;
+  --ink-muted-base: #51576b;
+  --ink-faint-base: #646b82;
+
+  --ink: var(--ink-base); /* 17.11:1 on --ground */
+  /* 7.00 ground / 7.18 surface / 6.53 surface-2 */
+  --ink-muted: var(--ink-muted-base);
   /* Carries every eyebrow, breadcrumb and numeric readout, so it has to clear
      4.5:1 on all three light surfaces, not just on white. It is also the one
      ink that fails on `--glass` — see the glass block below. */
-  --ink-faint: #646b82; /* 5.12 / 5.29 / 4.82 */
+  --ink-faint: var(--ink-faint-base); /* 5.16 / 5.29 / 4.82 */
 
   /* Text on the dark set. */
   --ink-inverse: #faf9f5;
@@ -68,7 +114,7 @@
      tokens because they are two jobs — text/marks and fills — and a future
      palette may need them to diverge again, as the clay one did.
      --------------------------------------------------------------------- */
-  --accent: #4338ca; /* 7.65 ground / 7.90 surface / 7.19 surface-2 */
+  --accent: #4338ca; /* 7.70 ground / 7.90 surface / 7.19 surface-2 */
   --accent-hover: #372fa8;
   --accent-fill: #4338ca;
   --accent-fill-hover: #372fa8;
@@ -112,7 +158,7 @@
      and a target chip legible side by side, not the luminance — the two are
      within 1.01:1 of each other and always have been.
      --------------------------------------------------------------------- */
-  --legacy: #7c6956; /* 5.06 ground / 5.23 surface / 4.76 surface-2 */
+  --legacy: #7c6956; /* 5.10 ground / 5.23 surface / 4.76 surface-2 */
   --legacy-soft: rgb(124 105 86 / 0.09);
   --legacy-line: rgb(124 105 86 / 0.28);
   --legacy-wash: #f3f1ed;
@@ -136,23 +182,23 @@
      the step that can.
      --------------------------------------------------------------------- */
   --tint-rose: #e79aad;
-  --tint-rose-ink: #cd244e; /* 5.13:1 on --ground */
+  --tint-rose-ink: #cd244e; /* 5.17:1 on --ground */
   --tint-rose-wash: #fceaef;
 
   --tint-teal: #25c2d0;
-  --tint-teal-ink: #107780; /* 5.11:1 */
+  --tint-teal-ink: #107780; /* 5.15:1 */
   --tint-teal-wash: #d2f5f8;
 
   --tint-sage: #8cbe68;
-  --tint-sage-ink: #4a772a; /* 5.13:1 */
+  --tint-sage-ink: #4a772a; /* 5.16:1 */
   --tint-sage-wash: #e4f3da;
 
   --tint-amber: #dba832;
-  --tint-amber-ink: #8a6611; /* 5.09:1 */
+  --tint-amber-ink: #8a6611; /* 5.13:1 */
   --tint-amber-wash: #f8eed5;
 
   --tint-violet: #c5a3e2;
-  --tint-violet-ink: #9045d1; /* 5.13:1 */
+  --tint-violet-ink: #9045d1; /* 5.17:1 */
   --tint-violet-wash: #f3ebfa;
 
   /* Status poles for content confirmed vs unconfirmed. `positive` marks a
@@ -168,6 +214,23 @@
   /* References --accent rather than copying its value. This used to be a
      duplicated hex and silently kept the old color through a re-theme. */
   --focus: var(--accent);
+
+  /* The hairline of light along the primary control's top edge, and the one
+     around an icon chip. Both were hardcoded inside their own rules — the chip
+     in particular was a literal `rgb(23 25 32 / 0.06)`, which is a plain
+     non-negotiable #5 violation and was invisible the moment the surface
+     underneath it went dark. */
+  --gloss-edge: rgb(255 255 255 / 0.25);
+  --gloss-edge-hover: rgb(255 255 255 / 0.22);
+  --chip-rule: rgb(23 25 32 / 0.06); /* 1.12–1.13:1 over the five washes */
+
+  /* A no-op entry in the elevation stack, so a shadow list can carry a ring
+     without the list itself differing between themes. On light the page is lit
+     and a shadow does the separating; on near-black there is no light to cast
+     one, so the theme block swaps this for an inset hairline. Declared as a
+     valid zero-alpha shadow rather than `none`, because `none` inside a
+     comma-separated list invalidates the whole declaration. */
+  --shadow-ring: 0 0 rgb(0 0 0 / 0);
 
   /* -------------------------------------------------------------------------
      Glass.
@@ -188,7 +251,6 @@
      ------------------------------------------------------------------------- */
   --glass: rgb(255 255 255 / 0.58);
   --glass-strong: rgb(255 255 255 / 0.82);
-  --glass-faint: rgb(255 255 255 / 0.3);
   --glass-edge: rgb(255 255 255 / 0.65); /* the inset hairline of light */
   /* The same hairline at the far edge, where a pane catches less light. A
      separate token rather than mixing it inline in the shadow list: an
@@ -214,6 +276,22 @@
   --aura-floor: #a5a2f2; /* hero, darkest pixel */
   --aura-cta-peak: #0c3145; /* CTA, brightest pixel */
 
+  /* The dark auras' shared ramp. Three rules consume it — the closing CTA, the
+     quote band, and the hero once the page is in dark mode — and they differ
+     only in ellipse geometry. The stops lived inline in two rules and were
+     about to live inline in three, so "every dark aura shares one worst pixel"
+     is structural here rather than a thing someone has to keep true by hand.
+
+     `--aura-cta-peak` above is that worst pixel, and it is the third stop's own
+     centre composited alone: at that point the other two layers are past the
+     end of their ramps and contribute nothing. Green is 71.5% of luminance, so
+     the cyan is what wins the brightest-pixel contest. Move any stop here and
+     the peak has to be re-measured. */
+  --aura-dark-base: #0d0f1f;
+  --aura-dark-1: rgb(67 56 202 / 0.46);
+  --aura-dark-2: rgb(124 58 237 / 0.3);
+  --aura-dark-3: rgb(8 145 178 / 0.26); /* the stop that sets --aura-cta-peak */
+
   /* What each glass surface composites to over its own aura floor. A
      translucent token cannot be contrast-checked against a moving backdrop, so
      the worst case is pinned here and every text pair is measured against it.
@@ -236,7 +314,7 @@
      system can be read, and measured, side by side. Nothing consumes `--d-*`
      directly — the block below aliases them onto the real token names.
      ------------------------------------------------------------------------- */
-  --d-ground: #0c0d11; /* 18.79:1 off --ground */
+  --d-ground: #0c0d11; /* 18.93:1 off --ground */
   --d-surface: #15171e;
   --d-surface-2: #1c1f29;
 
@@ -277,6 +355,66 @@
   --d-warn-soft: rgb(186 142 39 / 0.12);
   --d-warn-line: rgb(186 142 39 / 0.3);
 
+  /* The decorative tints on the dark set. Only two of the three steps need a
+     dark counterpart: the base `--tint-<hue>` is a fill or gradient stop and
+     has no consumer at all today, while the wash is a cell background and the
+     ink is the step that carries text, and both of those break outright on
+     near-black — a pastel wash becomes the brightest thing on the page.
+
+     The washes are luminance-matched to each other at ~1.16:1 off
+     `--d-ground`, which is the weight `--d-surface-2` already carries, so a
+     tinted cell sits at the same elevation as an untinted one. They hold their
+     saturation at a low lightness on purpose: desaturating them at this level
+     collapses all five into the same brown-grey and the hue stops being
+     legible, which is the one job a decorative tint has.
+
+     The inks are weight-matched at ~6.5:1, the same convention the two
+     semantic poles follow on dark (6.46 and 6.49). The binding constraint is
+     not the ink, though — it is `--d-ink-faint` on the wash, because
+     `evidence.tsx` puts a `text-ink-faint` label directly on one. That pair
+     lands at 4.64–4.67 and is what stops the washes going any lighter.
+
+     Still decorative, still stating nothing. Carried over with them, and worth
+     naming because the dark set inherits it structurally rather than
+     introducing it: `--tint-amber-ink` is byte-identical to `--warn`, and
+     `--d-tint-amber-ink` is within 1.02:1 of `--d-warn`. That is exactly the
+     hue/pole collision the light tint block warns about, it is live today, and
+     the only real fix is moving the amber hue in both sets. `pnpm contrast`
+     reports it by name so it cannot be forgotten. */
+  --d-tint-rose-wash: #31151c; /* 1.16:1 off --d-ground */
+  --d-tint-rose-ink: #dd7690; /* 6.54 d-ground / 5.63 own wash */
+
+  --d-tint-teal-wash: #0f2123; /* 1.17:1 */
+  --d-tint-teal-ink: #2ca5af; /* 6.57 / 5.63 */
+
+  --d-tint-sage-wash: #16210e; /* 1.16:1 */
+  --d-tint-sage-ink: #5ea72a; /* 6.51 / 5.59 */
+
+  --d-tint-amber-wash: #231d0f; /* 1.16:1 */
+  --d-tint-amber-ink: #ba902e; /* 6.58 / 5.67 */
+
+  --d-tint-violet-wash: #271735; /* 1.17:1 */
+  --d-tint-violet-ink: #b481df; /* 6.61 / 5.67 */
+
+  /* The far end of the gradient headline on dark. Same hue family as
+     `--grad-end`, lifted to clear near-black: the ramp bottoms out at 6.46:1 on
+     `--d-ground`, and its worst point is the `--d-accent` end, which is already
+     measured. */
+  --d-grad-end: #c77ce8; /* 6.91:1 on --d-ground */
+
+  /* The dark counterparts of the two hairlines of light. The chip's goes up
+     from 6% black to 8% white because it is now sitting on a dark wash rather
+     than a pale one — measured 1.25–1.26:1 over all five, which is where
+     `--d-rule` sits (1.27). It is deliberately not `--glass-rule`, which is 9%:
+     these are two hairlines on two different kinds of surface and collapsing
+     them would couple a chip to the glass set.
+
+     The gloss edge goes the other way and up, to 34%: the dark primary control
+     is a light periwinkle fill, and 25% white vanishes on it. */
+  --d-chip-rule: rgb(255 255 255 / 0.08);
+  --d-gloss-edge: rgb(255 255 255 / 0.34);
+  --d-gloss-edge-hover: rgb(255 255 255 / 0.3);
+
   /* -------------------------------------------------------------------------
      Syntax.
 
@@ -302,18 +440,41 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Dark band scoping.
+   The dark set, applied — as the whole page, or as one band.
 
-   `Section` already stamps `data-tone` on every band, and `@theme inline`
-   resolves each `var()` at the use site rather than baking a value into the
-   utility. Reassigning the raw tokens on a subtree therefore re-themes every
-   Tailwind utility underneath it — `bg-surface`, `text-ink-muted`, `border-rule`
-   and `.lattice` all follow with no change.
+   `@theme inline` resolves each `var()` at the use site rather than baking a
+   value into the utility, so reassigning the raw tokens on a subtree re-themes
+   every Tailwind utility underneath it — `bg-surface`, `text-ink-muted`,
+   `border-rule` and `.lattice` all follow with no change. That is the whole
+   mechanism, and it is indifferent to whether the subtree is a band or the
+   document element.
 
-   This replaces the `tone="inverse"` prop that Button, Label and Readout used to
-   carry. A component on a dark band no longer has to be told it is on one, which
-   is what made the dark band expensive enough to use only as a thin strip.
+   Which is why both selectors share one declaration list:
+
+     :root[data-theme="dark"]   the reader asked for dark; the page is dark
+     [data-tone="inverse"]      one band is dark, on a page of either kind
+
+   The two cannot be allowed to diverge. An inverse band inside a dark page
+   must be an exact no-op, and a single declaration present in one list and
+   absent from the other would make that band behave differently depending on
+   the page it is on. This list is therefore complete with respect to `:root`:
+   every token whose value is surface-dependent is here, including the ten tint
+   steps, the gradient end and the shadow hue, all of which the band-only
+   version of this block omitted because a band never needed them.
+
+   `:root[data-theme="dark"]` rather than `[data-theme="dark"]`: at (0,2,0) it
+   cannot be outranked by a future single-attribute rule, and it carries no
+   `":root {"` substring, which matters because `scripts/contrast.mjs` finds the
+   token block by scanning for exactly that.
+
+   It also replaces the `tone="inverse"` prop that Button, Label and Readout used
+   to carry. A component on a dark surface is never told it is on one.
    --------------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"],
 [data-tone="inverse"] {
   --ground: var(--d-ground);
   --surface: var(--d-surface);
@@ -325,9 +486,12 @@
   --ink: var(--d-ink);
   --ink-muted: var(--d-ink-muted);
   --ink-faint: var(--d-ink-faint);
-  --ink-inverse: #171920;
-  --ink-inverse-muted: #51576b;
-  --ink-inverse-faint: #646b82;
+  /* On a dark surface, "inverse ink" is the light set's ink. These referenced
+     the three hexes directly and were byte copies of `--ink`, `--ink-muted`
+     and `--ink-faint` — see the `-base` tokens they now point at. */
+  --ink-inverse: var(--ink-base);
+  --ink-inverse-muted: var(--ink-muted-base);
+  --ink-inverse-faint: var(--ink-faint-base);
 
   --accent: var(--d-accent);
   --accent-hover: var(--d-accent-hover);
@@ -352,6 +516,49 @@
   --warn-soft: var(--d-warn-soft);
   --warn-line: var(--d-warn-line);
 
+  /* The decorative tints. Only the wash and ink steps move; the base hue is a
+     fill or gradient stop and reads the same on either surface. These reach the
+     DOM through one path — the `tints` map in card.tsx, which sets
+     `--chip-wash` and `--chip-ink` as `var()` references in an inline style —
+     so reassigning them here re-themes every tinted card, figure cell and chip
+     with no component change. */
+  --tint-rose-ink: var(--d-tint-rose-ink);
+  --tint-rose-wash: var(--d-tint-rose-wash);
+  --tint-teal-ink: var(--d-tint-teal-ink);
+  --tint-teal-wash: var(--d-tint-teal-wash);
+  --tint-sage-ink: var(--d-tint-sage-ink);
+  --tint-sage-wash: var(--d-tint-sage-wash);
+  --tint-amber-ink: var(--d-tint-amber-ink);
+  --tint-amber-wash: var(--d-tint-amber-wash);
+  --tint-violet-ink: var(--d-tint-violet-ink);
+  --tint-violet-wash: var(--d-tint-violet-wash);
+
+  --grad-end: var(--d-grad-end);
+
+  /* Two hairlines of light, both brighter here than their light-set
+     counterparts because they now sit on dark rather than pale surfaces. */
+  --chip-rule: var(--d-chip-rule);
+  --gloss-edge: var(--d-gloss-edge);
+  --gloss-edge-hover: var(--d-gloss-edge-hover);
+
+  /* Shadows go hueless, and the elevation stack gains a ring.
+
+     The note in the token block argues that a near-black indigo is what a
+     shadow looks like on a page lit by a chromatic ground, and that holds —
+     but only because the ground is chromatic. On near-black there is no
+     coloured light to tint an occlusion with, and a *lighter* indigo under a
+     card would be the decorative lilac drop that same note rejects. So the hue
+     goes to black and the alphas stay exactly where they are.
+
+     Which leaves one real problem: a black shadow on a ground at luminance
+     0.0045 separates nothing. Almost everything that carries a shadow has
+     another edge on dark — cards and figure cells have `border-rule`, glass has
+     its own border and two inset highlights, the primary control's fill is
+     6.46:1 against the ground. `Section panel` is the exception, so the stack
+     carries an inset hairline instead of relying on the drop. */
+  --accent-glow: 0 0 0;
+  --shadow-ring: inset 0 0 0 1px var(--rule);
+
   /* Glass inverts with the band: a frosted panel on a dark aura is the dark
      step, and its hairline of light goes on top rather than being a shadow. */
   --glass: var(--glass-dark);
@@ -361,7 +568,14 @@
   --glass-rule: var(--glass-dark-rule);
   --glass-solid: var(--glass-dark-solid);
   --glass-strong-solid: var(--glass-dark-solid);
-  --aura-floor: var(--aura-cta-floor);
+  /* `--aura-floor` is deliberately not reassigned here. It is a measurement
+     constant, read by `pnpm contrast` and consumed by nothing in CSS, and the
+     dark half of that measurement is `--aura-cta-peak`, which the derivation
+     table already uses. This line used to read
+     `--aura-floor: var(--aura-cta-floor)`, pointing at a token that was never
+     declared anywhere — invalid at computed-value time, inert at runtime, and
+     structurally invisible to the script, which reads only `:root`. The
+     dangling-var lint in `scripts/contrast.mjs` now catches that class of bug. */
 
   /* The light accent measures ~1.5:1 on near-black and is invisible there. */
   --focus: var(--d-accent);
@@ -370,13 +584,28 @@
   color: var(--d-ink);
 }
 
-/* The scoping block above paints its own background and is unlayered, so it
-   outranks anything in `@layer components` at equal specificity. A glass panel
-   that IS the dark band — the closing CTA, the hero's code card — has to win
-   that, so it is restated here rather than relying on source order. */
+/* The block above paints its own background and is unlayered, so it outranks
+   anything in `@layer components` at equal specificity. Any surface that IS the
+   dark band, rather than sitting on one, has to win that — so it is restated
+   here rather than left to source order.
+
+   Glass first: the closing CTA's panel and the hero's code card. */
 [data-tone="inverse"].glass,
 [data-tone="inverse"].glass-strong {
   background-color: var(--glass-dark);
+}
+
+/* And the two dark auras, for the same reason and with a sharper consequence.
+   `.aura-cta` and `.aura-quote` are both applied to the element that carries
+   `data-tone="inverse"`, so their `background-color` lost to `--d-ground` and
+   the gradients have been compositing over the wrong base — close enough to
+   look right, and wrong by exactly the amount that `--aura-cta-peak` is
+   measured over. The peak the script derives has to be the peak that renders,
+   which is what makes this a correctness fix rather than a two-step colour
+   change. */
+[data-tone="inverse"].aura-cta,
+[data-tone="inverse"].aura-quote {
+  background-color: var(--aura-dark-base);
 }
 
 @supports not (
@@ -508,19 +737,29 @@
      under a white card. This is the other thing: a near-black indigo at low
      alpha, which is what a shadow actually looks like on a page lit by a
      chromatic ground. Keep the alphas where they are; the hue is the change,
-     not the weight. */
-  --shadow-menu: 0 12px 32px -12px rgb(var(--accent-glow) / 0.22);
+     not the weight. On the dark set the hue goes to black and the alphas still
+     do not move — see the theme block, which explains why that is the same
+     argument rather than an exception to it.
+
+     Four of the six lead with `--shadow-ring`, which is nothing on light and an
+     inset hairline on dark. A drop shadow needs light to be cast by; on
+     near-black there is none, and a panel with no border of its own would
+     otherwise have no edge at all. `glass` is excluded because it already
+     carries a border and two inset highlights, and `control` because an inset
+     ring there would eat the gloss edge. */
+  --shadow-menu:
+    var(--shadow-ring), 0 12px 32px -12px rgb(var(--accent-glow) / 0.22);
   /* A soft ambient lift for tinted cells. Wider than --shadow-card, because a
      card sitting on a colored wash needs more diffusion or it reads as a
      cut-out. */
   --shadow-tint:
-    0 1px 2px rgb(var(--accent-glow) / 0.04),
+    var(--shadow-ring), 0 1px 2px rgb(var(--accent-glow) / 0.04),
     0 8px 24px -8px rgb(var(--accent-glow) / 0.1);
   --shadow-card:
-    0 1px 2px rgb(var(--accent-glow) / 0.05),
+    var(--shadow-ring), 0 1px 2px rgb(var(--accent-glow) / 0.05),
     0 4px 12px -4px rgb(var(--accent-glow) / 0.09);
   --shadow-panel:
-    0 2px 4px rgb(var(--accent-glow) / 0.05),
+    var(--shadow-ring), 0 2px 4px rgb(var(--accent-glow) / 0.05),
     0 18px 44px -12px rgb(var(--accent-glow) / 0.16);
   --shadow-glass:
     0 1px 2px rgb(var(--accent-glow) / 0.05),
@@ -733,7 +972,7 @@
       var(--accent-fill) 62%
     );
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.25),
+      inset 0 1px 0 var(--gloss-edge),
       var(--shadow-control);
   }
 
@@ -744,7 +983,7 @@
       var(--accent-fill-hover) 62%
     );
     box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.22),
+      inset 0 1px 0 var(--gloss-edge-hover),
       var(--shadow-control-hover);
   }
 
@@ -756,6 +995,12 @@
     );
   }
 
+  /* The dark light model, not merely the light one re-tinted: the clean edge
+     and the lit edge swap ends. Reassigning `--accent-glow` would get the
+     colour right and the direction wrong, which is why this is its own rule
+     rather than a token change. Descendant form only on the theme selector —
+     `:root` is never itself a `.sheen`. */
+  :root[data-theme="dark"] .sheen,
   [data-tone="inverse"] .sheen,
   [data-tone="inverse"].sheen {
     background-image: linear-gradient(
@@ -905,24 +1150,83 @@
       );
   }
 
+  /* The hero aura on a dark page. It keeps its own three ellipse geometries —
+     the hero's light comes from the upper left and that is the composition —
+     and takes the shared dark ramp, so it is a fourth geometry on an already
+     measured gradient rather than a fourth aura.
+
+     Both halves have to change. Swapping only the stops would leave
+     `background-color: #eef0fd` as the darkest pixel and the panel would still
+     be a bright block on a near-black page.
+
+     Measured: the brightest pixel under this geometry is `--aura-cta-peak`,
+     the same `#0c3145` the other two dark auras hit, at four aspect ratios.
+     That is not a consequence of sharing stops — overlap is geometry — but of
+     where the peak comes from: the cyan stop's own centre, at a point where the
+     other two layers are past the end of their ramps. The hero's stop ends are
+     wider (70/70/72% against 60/62/64%) and it still holds. So every dark glass
+     composite and every "Glass — dark" row carries over untouched. */
+  :root[data-theme="dark"] .aura-hero {
+    background-color: var(--aura-dark-base);
+    background-image:
+      radial-gradient(
+        ellipse 62% 58% at 12% 16%,
+        var(--aura-dark-1) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 56% 52% at 90% 10%,
+        var(--aura-dark-2) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 68% 62% at 66% 100%,
+        var(--aura-dark-3) 0%,
+        transparent 72%
+      );
+  }
+
+  /* Two bands lose their edge on a dark page, because a dark panel on a dark
+     ground is 1.02:1 at its own base colour — the aura's glow carries the
+     middle of each, but not the parts the gradients do not reach.
+
+     The CTA is a rounded panel with no border of its own, and it is the corners
+     that dissolve, which is exactly where the base colour sits. `outline`
+     rather than `border` so nothing reflows, and rather than `box-shadow` so it
+     does not fight the `shadow-panel` utility already on the element.
+
+     The quote band is full-bleed, so it has no corners to lose and only needs
+     its two horizontal edges. It carries no shadow utility, so an inset pair is
+     free here. */
+  :root[data-theme="dark"] .aura-cta {
+    outline: 1px solid var(--rule);
+    outline-offset: -1px;
+  }
+
+  :root[data-theme="dark"] .aura-quote {
+    box-shadow:
+      inset 0 1px 0 var(--rule),
+      inset 0 -1px 0 var(--rule);
+  }
+
   /* The closing panel, on the dark set. Deeper and more saturated than the
      hero because it sits on near-black rather than on paper. */
   .aura-cta {
-    background-color: #0d0f1f;
+    background-color: var(--aura-dark-base);
     background-image:
       radial-gradient(
         ellipse 75% 120% at 10% 0%,
-        rgb(67 56 202 / 0.46) 0%,
+        var(--aura-dark-1) 0%,
         transparent 60%
       ),
       radial-gradient(
         ellipse 60% 100% at 96% 108%,
-        rgb(124 58 237 / 0.3) 0%,
+        var(--aura-dark-2) 0%,
         transparent 62%
       ),
       radial-gradient(
         ellipse 70% 90% at 70% 20%,
-        rgb(8 145 178 / 0.26) 0%,
+        var(--aura-dark-3) 0%,
         transparent 64%
       );
   }
@@ -986,21 +1290,21 @@
      mean a second worst case and a second set of solid companions. Only the
      geometry differs. */
   .aura-quote {
-    background-color: #0d0f1f;
+    background-color: var(--aura-dark-base);
     background-image:
       radial-gradient(
         ellipse 55% 130% at 82% 8%,
-        rgb(67 56 202 / 0.46) 0%,
+        var(--aura-dark-1) 0%,
         transparent 60%
       ),
       radial-gradient(
         ellipse 50% 120% at 12% 96%,
-        rgb(124 58 237 / 0.3) 0%,
+        var(--aura-dark-2) 0%,
         transparent 62%
       ),
       radial-gradient(
         ellipse 60% 100% at 40% 30%,
-        rgb(8 145 178 / 0.26) 0%,
+        var(--aura-dark-3) 0%,
         transparent 64%
       );
   }
@@ -1016,7 +1320,7 @@
     border-radius: var(--radius-md);
     background-color: var(--chip-wash, var(--surface-2));
     color: var(--chip-ink, var(--ink));
-    box-shadow: inset 0 0 0 1px rgb(23 25 32 / 0.06);
+    box-shadow: inset 0 0 0 1px var(--chip-rule);
   }
 
   /* Long-form MDX body copy. */
@@ -1073,7 +1377,7 @@
 
    Hard rule, and the reason the previous site failed: nothing here gates
    content on scroll. Every word is in the server-rendered HTML and visible on
-   arrival. These animate marks — hairlines, ticks, a bus line — never text, and
+   arrival. These animate marks — hairlines, ticks, the pipeline bus — never text, and
    they run on load rather than on intersection.
 
    This survives the move to Auraform's surfaces unchanged, and deliberately so:
@@ -1137,6 +1441,33 @@
 
 /* The platform strip. Translates one of two identical halves by exactly -50%,
    which is what makes the loop seamless. */
+/* A pulse travelling a path.
+ *
+ * Same `pathLength="1"` contract as `draw-on`, used the other way round: a
+ * short dash instead of a full-length one, looping its offset so the lit
+ * segment runs the length of the stroke. The dash is `0.06 0.94` — six percent
+ * lit, the rest gap — so exactly one pulse is on the path at a time.
+ *
+ * It has to be its own overlay stroke rather than an extra animation on the
+ * drawn one. `animate-draw` owns `stroke-dasharray`, and a stroke cannot carry
+ * two different dash patterns, which is the same reason a dashed stroke cannot
+ * also be an animated one.
+ *
+ * This is the "bus pulse" that the motion note here and AGENTS.md have both
+ * described for some time. Neither a keyframe nor a usage existed anywhere in
+ * the tree or its history — the documentation was describing an intention. It
+ * exists now, which makes "three looping animations" true rather than
+ * aspirational.
+ */
+@keyframes bus-pulse {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -1179,6 +1510,14 @@
     animation: draw-on 760ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
 
+  /* Linear, because a pulse travelling a bus at a varying speed reads as a
+     stutter rather than as motion. Slow enough to be followed rather than
+     noticed. */
+  .animate-bus-pulse {
+    stroke-dasharray: 0.06 0.94;
+    animation: bus-pulse 4.5s linear infinite;
+  }
+
   .animate-mark-in {
     animation: mark-in 320ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
@@ -1191,6 +1530,11 @@
      animation forced to a single 0.01ms iteration parks at whatever frame it
      lands on, which for the scan line is a tint stuck over one row and for the
      marquee is a strip frozen halfway through its translate. */
+  /* The three looping animations are switched off outright here rather than
+     left to the global guard above. That guard forces every animation to a
+     single 0.01ms iteration, which parks an infinite one at whatever frame it
+     happens to land on — a pulse frozen mid-path, a marquee stopped halfway
+     through its translate. Off is the correct resting state for all three. */
   @media (prefers-reduced-motion: reduce) {
     .animate-line-scan {
       display: none;
@@ -1198,6 +1542,9 @@
     .animate-marquee {
       animation: none;
       transform: none;
+    }
+    .animate-bus-pulse {
+      display: none;
     }
   }
 }

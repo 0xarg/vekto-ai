@@ -5,6 +5,8 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
 import { cn } from "@/lib/utils";
+import { FigureChart } from "@/components/diagrams/figure-chart";
+import type { SourcedFigure } from "@/lib/content/schemas";
 
 /**
  * MDX body renderer.
@@ -69,14 +71,35 @@ const components = {
       <div className="[&>ul]:m-0 [&>ul]:list-none [&>ul]:p-0">{children}</div>
     </div>
   ),
-  /** Reserved for stating limits — what does not convert automatically. */
+  /**
+   * Reserved for stating limits — what does not convert automatically.
+   *
+   * Its label is an `h2`, not a styled div. Every body that uses this block
+   * previously carried a `## What this does not solve` heading immediately
+   * above it, which would have meant the same label twice; dropping the
+   * heading in favour of the block would have taken a real `h2` out of the
+   * document outline to gain a decorative one. The label carries the heading
+   * instead, and looks exactly as it did.
+   */
   Limits: ({ children }: { children: React.ReactNode }) => (
     <div className="border-legacy-line bg-legacy-soft my-8 rounded-sm border p-5 sm:p-6">
-      <div className="text-label text-legacy mb-3 font-mono uppercase">
+      <h2 className="text-label text-legacy scroll-mt-anchor mt-0 mb-3 font-mono uppercase">
         What this does not do
-      </div>
+      </h2>
       {children}
     </div>
+  ),
+  /**
+   * A sourced figure with its bar, for a body that wants to show one.
+   *
+   * It was React-only and reachable from `evidence.tsx` alone, so the homepage
+   * band was the only place on the site a sourced figure could carry its
+   * shape. The component itself is unchanged and enforces the same rule: it
+   * returns null unless the frontmatter declares a `chart`, because inferring a
+   * number out of a sentence to size a bar is what non-negotiable #6 forbids.
+   */
+  FigureChart: ({ figure }: { figure: SourcedFigure }) => (
+    <FigureChart figure={figure} />
   ),
 };
 

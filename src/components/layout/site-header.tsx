@@ -127,7 +127,7 @@ export function SiteHeader() {
        8px above — small, but it is the first thing on the page and it was the
        one element not sitting on the grid. */
     <header
-      className="3xl:px-16 sticky z-50 px-5 sm:px-8 lg:px-10"
+      className="3xl:px-8 sticky z-50 px-5 sm:px-8 lg:px-10"
       style={{ top: "var(--header-gap)" }}
     >
       <a

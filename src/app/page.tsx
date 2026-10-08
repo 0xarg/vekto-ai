@@ -31,29 +31,61 @@ export const metadata = buildMetadata({
   path: "/",
 });
 
+/**
+ * `offset`, `aspect` and `drift` are what stop this row reading as a generated
+ * template. Three equal cards evenly spaced in a three-column grid is the shape
+ * every AI-built marketing page produces, and it was this one's too. The cards
+ * now sit at three different heights, carry graphics of three different
+ * proportions, and travel at three different parallax rates, so they slide past
+ * one another rather than moving as a block.
+ *
+ * None of it asserts anything — no copy changed and no numeral appeared. It is
+ * composition, which non-negotiable #6 explicitly permits ("decorative surface
+ * is permitted and expected"); what it forbids is a graphic that states
+ * something untrue, and a card sitting 56px lower than its neighbour states
+ * nothing at all.
+ */
 const problems: {
   title: string;
   body: string;
   tint: Tint;
   diagram: ConceptName;
+  offset: string;
+  aspect: string;
+  drift: string;
 }[] = [
   {
     title: "Manual rewrites do not finish",
     body: "Hand-migrating an estate of any size is measured in years, and the estate keeps changing underneath the effort.",
     tint: "rose",
     diagram: "unfinishable",
+    offset: "",
+    aspect: "aspect-[4/3]",
+    drift: "2.5rem",
   },
   {
     title: "Estimates are guesses",
     body: "Without a complete dependency graph, scoping a migration is guesswork — which is why so many are re-scoped mid-flight.",
-    tint: "amber",
+    // Was `amber`. `--tint-amber-ink` is byte-identical to `--warn`, which
+    // `pnpm contrast` reports as a collision on every run — so this card was
+    // painting "estimates are guesses" in the site's outstanding-content
+    // colour, on the homepage, where a decorative tint is supposed to state
+    // nothing. The palette fix for amber is still open; taking it off this card
+    // is not that fix, it just stops the live collision being on the homepage.
+    tint: "teal",
     diagram: "divergent",
+    offset: "lg:mt-14",
+    aspect: "aspect-[9/5]",
+    drift: "0.75rem",
   },
   {
     title: "Risk sits in the gaps",
     body: "The failures are rarely in the obvious flows. They are in the edge cases nobody remembered were there.",
     tint: "violet",
     diagram: "gaps",
+    offset: "lg:mt-7",
+    aspect: "aspect-[7/5]",
+    drift: "1.9rem",
   },
 ];
 
@@ -62,11 +94,11 @@ const problems: {
  * white, so the hue still does the job of telling one cell from another once the
  * icon chip it used to carry is gone.
  */
-function CardGraphic({ name }: { name: ConceptName }) {
+function CardGraphic({ name, aspect }: { name: ConceptName; aspect: string }) {
   return (
     <div
       aria-hidden
-      className="border-rule text-ink-muted flex aspect-[9/5] items-center justify-center overflow-hidden border-b px-5 py-4"
+      className={`border-rule text-ink-muted flex items-center justify-center overflow-clip border-b px-5 py-4 ${aspect}`}
       style={{ backgroundColor: "var(--chip-wash)" }}
     >
       <ConceptDiagram name={name} />
@@ -86,14 +118,18 @@ export default function HomePage() {
         ]}
       />
 
+      {/* The headline splits where the sentence already does, and the split is
+          the site's own semantics rather than a layout: the left phrase is the
+          source estate you are leaving, the right is the target you arrive at
+          without the rewrite. Everywhere else a migration is depicted, that
+          direction is encoded by colour; this is the one place it never was.
+          The second phrase recedes to `--ink-muted` for the same reason the
+          source pole recedes — the thing you are moving away from is not the
+          thing being claimed. */}
       <Hero
         eyebrow="Documented"
-        title={
-          <>
-            Move off legacy middleware
-            <br className="hidden sm:block" /> without rewriting it by hand.
-          </>
-        }
+        lead="Move off legacy middleware"
+        trail="without rewriting it by hand."
         lede="VektoForge runs five AI agents across your existing integration estate — inventorying what you have, generating implementations on your target platform, and showing you exactly what changed and what still needs a human."
       />
 
@@ -107,21 +143,39 @@ export default function HomePage() {
         eyebrow="The problem"
         heading="Legacy integration estates are large, undocumented and load-bearing."
         lede="The people who built them have moved on. The documentation describes an earlier version. Nothing can be switched off, because nobody is certain what depends on what."
+        decoration={
+          /* `Section`'s `decoration` prop, used for the first time since it was
+             written. It clips the band and makes it a positioning context, and
+             its contract is that nothing readable goes in here — which is why
+             the form sits in the lower half, under the card composition rather
+             than under the centred header above it. */
+          <div
+            aria-hidden
+            className="glass-form pointer-events-none absolute inset-x-0 top-1/3 bottom-0"
+          />
+        }
       >
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {problems.map((item) => (
-            <Card
+            <div
               key={item.title}
-              tint={item.tint}
-              graphic={<CardGraphic name={item.diagram} />}
+              className={`drift ${item.offset}`}
+              style={{ "--drift": item.drift } as React.CSSProperties}
             >
-              <h3 className="font-display text-lg font-semibold">
-                {item.title}
-              </h3>
-              <p className="text-ink-muted mt-3 text-sm leading-relaxed">
-                {item.body}
-              </p>
-            </Card>
+              <Card
+                tint={item.tint}
+                graphic={
+                  <CardGraphic name={item.diagram} aspect={item.aspect} />
+                }
+              >
+                <h3 className="font-display text-lg font-semibold">
+                  {item.title}
+                </h3>
+                <p className="text-ink-muted mt-3 text-sm leading-relaxed">
+                  {item.body}
+                </p>
+              </Card>
+            </div>
           ))}
         </div>
       </Section>

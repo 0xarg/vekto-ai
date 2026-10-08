@@ -1,5 +1,6 @@
 import { migrations, publishedMigrations } from "@/content/migrations";
 import { tokenize, tokenClass, type Token } from "@/lib/syntax";
+import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
 /**
@@ -43,9 +44,10 @@ function CodePane({
       <div className="border-rule flex items-baseline justify-between gap-3 border-b px-4 py-2.5">
         <Label>{caption}</Label>
         <span
-          className={`text-label font-mono uppercase ${
-            pole === "source" ? "text-legacy" : "text-accent"
-          }`}
+          className={cn(
+            "text-label font-mono uppercase",
+            pole === "source" ? "text-legacy" : "text-accent",
+          )}
         >
           {language}
         </span>
@@ -81,9 +83,10 @@ function CodePane({
                   pane reads top to bottom the way the agent processes it. */}
               <span
                 aria-hidden
-                className={`animate-line-scan pointer-events-none absolute inset-y-0 left-0 w-full ${
-                  pole === "source" ? "bg-legacy-soft" : "bg-accent-soft"
-                }`}
+                className={cn(
+                  "animate-line-scan pointer-events-none absolute inset-y-0 left-0 w-full",
+                  pole === "source" ? "bg-legacy-soft" : "bg-accent-soft",
+                )}
                 style={{
                   animationDelay: `${(pole === "target" ? 900 : 0) + i * 140}ms`,
                 }}
@@ -119,7 +122,10 @@ export function CodeCard({ className }: { className?: string }) {
   return (
     <figure
       data-tone="inverse"
-      className={`glass w-full max-w-sm overflow-hidden rounded-lg ${className ?? ""}`}
+      className={cn(
+        "glass w-full max-w-sm overflow-clip rounded-lg",
+        className,
+      )}
     >
       <figcaption className="border-rule flex items-center justify-between gap-3 border-b px-4 py-2.5">
         <span className="text-ink text-[0.8125rem]">
@@ -154,7 +160,7 @@ export function CodeTransform({ className }: { className?: string }) {
   return (
     <figure
       data-tone="inverse"
-      className={`shadow-panel rounded-xl border ${className ?? ""}`}
+      className={cn("shadow-panel rounded-xl border", className)}
     >
       <figcaption className="border-rule flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b px-4 py-3">
         <span className="text-ink text-sm">
@@ -164,6 +170,37 @@ export function CodeTransform({ className }: { className?: string }) {
         </span>
         <Label>{specimen.demonstrates}</Label>
       </figcaption>
+
+      {/* ---- The polarity track ----
+
+          The band's whole subject is a direction of travel, and this states it
+          as one: a mark leaving the source pole and arriving at the target as
+          the figure is read. Scroll position drives it, through
+          `animation-timeline: view()` — no listener, no client boundary.
+
+          It decorates and it cannot gate. Both panes, both captions and every
+          token are painted and legible at any scroll position, including the
+          two extremes and including where `animation-timeline` is unsupported,
+          where the mark simply sits at the start of its track. The mark is also
+          `aria-hidden`: the two pane captions already say Source and Generated,
+          and a travelling dot has nothing to add to that in a screen reader. */}
+      <div
+        aria-hidden
+        className="border-rule relative h-px overflow-clip border-b"
+        style={{ "--mark-w": "4rem" } as React.CSSProperties}
+      >
+        {/* The travelling element is the full-width one, and the mark rides
+            inside it. A percentage in `translateX` resolves against the
+            element's OWN border box, so putting `.traverse` on the 4rem mark
+            made its travel `calc(100% - 4rem)` of 4rem — exactly zero, and
+            silently: the class was applied, the timeline was live, and the
+            mark simply never moved. `--mark-w` has to stay equal to the mark's
+            own width for the travel to stop at the right edge rather than
+            past it. */}
+        <div className="traverse absolute -top-px left-0 w-full">
+          <div className="from-legacy to-accent h-0.5 w-16 rounded-full bg-gradient-to-r" />
+        </div>
+      </div>
 
       <div className="lattice md:grid-cols-2">
         <CodePane

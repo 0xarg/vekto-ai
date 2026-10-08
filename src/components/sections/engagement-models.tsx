@@ -56,42 +56,63 @@ export const engagementModels: {
   },
 ];
 
+/**
+ * The middle card was already broken out of the row with `lg:-my-3`, which was
+ * the right instinct applied to one card. These are the other two: a vertical
+ * offset and a parallax rate each, so the row reads as three objects at three
+ * depths rather than as a grid of three equal boxes. Same move as the problem
+ * cards on the homepage, and for the same reason.
+ */
+const COMPOSITION = [
+  { offset: "", drift: "1.9rem" },
+  { offset: "lg:-my-3 lg:shadow-panel", drift: "0.6rem" },
+  { offset: "lg:mt-10", drift: "2.4rem" },
+] as const;
+
 export function EngagementModels({ withCta = false }: { withCta?: boolean }) {
   return (
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className="grid items-start gap-5 md:grid-cols-3">
       {engagementModels.map((model, i) => (
-        <Card
+        <div
           key={model.name}
-          tint={model.tint}
-          className={i === 1 ? "lg:shadow-panel lg:-my-3" : ""}
-          graphic={
-            <div
-              aria-hidden
-              className="border-rule text-ink-muted flex aspect-[5/2] items-center justify-center overflow-hidden border-b px-5"
-              style={{ backgroundColor: "var(--chip-wash)" }}
-            >
-              <ConceptDiagram name={model.diagram} />
-            </div>
+          className={`drift ${COMPOSITION[i]?.offset ?? ""}`}
+          style={
+            {
+              "--drift": COMPOSITION[i]?.drift ?? "1rem",
+            } as React.CSSProperties
           }
         >
-          <h3 className="font-display text-xl font-semibold">{model.name}</h3>
-          <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">
-            {model.body}
-          </p>
-          <div className="border-rule mt-6 border-t pt-5">
-            <Label className="mb-2">Best fit</Label>
-            <p className="text-ink text-sm leading-relaxed">{model.fit}</p>
-          </div>
-          {withCta && (
-            <ButtonLink
-              href={cta.primary.href}
-              variant="secondary"
-              className="mt-6 w-full"
-            >
-              {cta.primary.label}
-            </ButtonLink>
-          )}
-        </Card>
+          <Card
+            tint={model.tint}
+            graphic={
+              <div
+                aria-hidden
+                className="border-rule text-ink-muted flex aspect-[5/2] items-center justify-center overflow-clip border-b px-5"
+                style={{ backgroundColor: "var(--chip-wash)" }}
+              >
+                <ConceptDiagram name={model.diagram} />
+              </div>
+            }
+          >
+            <h3 className="font-display text-xl font-semibold">{model.name}</h3>
+            <p className="text-ink-muted mt-3 flex-1 text-sm leading-relaxed">
+              {model.body}
+            </p>
+            <div className="border-rule mt-6 border-t pt-5">
+              <Label className="mb-2">Best fit</Label>
+              <p className="text-ink text-sm leading-relaxed">{model.fit}</p>
+            </div>
+            {withCta && (
+              <ButtonLink
+                href={cta.primary.href}
+                variant="secondary"
+                className="mt-6 w-full"
+              >
+                {cta.primary.label}
+              </ButtonLink>
+            )}
+          </Card>
+        </div>
       ))}
     </div>
   );

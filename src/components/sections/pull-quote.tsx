@@ -29,7 +29,7 @@ export function PullQuote() {
     <section
       data-band
       data-tone="inverse"
-      className="aura-quote py-band-loose relative overflow-hidden"
+      className="aura-quote py-band-loose relative overflow-clip"
     >
       <Container width="default">
         {/* The stacked edges under the card. Two inset slivers rather than a
@@ -47,7 +47,7 @@ export function PullQuote() {
 
           <figure className="glass relative rounded-xl p-6 sm:p-10">
             <Label className="mb-6">From the case study</Label>
-            <blockquote className="text-ink font-display text-xl leading-snug font-medium text-balance sm:text-[1.75rem]">
+            <blockquote className="text-ink font-display text-[clamp(1.375rem,1rem+1.6vw,2.5rem)] leading-[1.18] font-medium tracking-[-0.02em] text-balance">
               &ldquo;{quote.text}&rdquo;
             </blockquote>
             <figcaption className="border-rule text-ink-muted mt-8 border-t pt-5 text-sm">

@@ -353,6 +353,28 @@ nobody reintroduces it from memory, not as live guidance.
   himself. He rejected three before it — Newsreader+Inter, then
   Fraunces+Instrument Sans — and New York was the fourth, our own choice,
   unrejected but superseded.
+- **The display scale is larger and tighter than it was**, and the two moved
+  together: the cap went 4.5rem → 5.75rem and the line-height 1.06 → 0.95. The
+  second does most of the work — a 92px headline at 1.06 is a large paragraph,
+  the same headline at 0.95 is a mark. `--text-numeral` has been at 0.95 since
+  it was written, which is the precedent rather than a coincidence.
+
+  0.95 is a **floor**. The reference sets its display at 0.85, which it can
+  because every one of its phrases is a single line and no two lines can
+  collide; ours wrap, and below 0.95 the descender of "legacy" meets the cap
+  height of the line under it.
+
+  5.75rem is measured rather than chosen, and it depends on the gutter. Both
+  hero phrases were set in Inter at a range of sizes and column widths: at the
+  old 144px gutter the split breaks at 88px, where the long phrase goes to three
+  lines and the short one stays at two. At the current gutter the columns are
+  ~716px and both hold at two lines at 92px. **The gutter is what buys the
+  size** — see the note in `container.tsx`, and change the two together or
+  neither.
+
+  The small end of every display clamp is untouched, so 320px renders exactly as
+  it did.
+
 - Headings are **Inter at weight 600**, tracked at `-0.02em`. This reverses the
   New York setting and the reasoning reverses with it, because the argument was
   always about the axis rather than about the number: New York has an
@@ -429,6 +451,17 @@ reasoned: `pnpm contrast` renders each stack and samples it.
 They are not decoration added behind the glass. **They are the half of it that
 makes the other half legible** — a frosted panel over flat white is a grey box.
 
+- **`--ink` is the only ink an aura carries, and that is now printed rather
+  than assumed.** `--ink-muted` measures 3.09:1 and `--ink-faint` 2.28:1 against
+  the light aura's worst pixel; both are under the floor, and `pnpm contrast`
+  reports both on every run. This exists because `PageHeader` was given
+  `.aura-hero` at `inset-0` with its breadcrumbs, eyebrow and lede on it across
+  seventeen routes, under a comment asserting that nothing readable sat there.
+  Nothing caught it: the aura machinery checks a hand-written list of four
+  usages and this was a fifth usage of one of them. **A new background layer is
+  not checked by that script — it is invisible to it**, which is worse than
+  failing, and is why decoration goes behind panels and compositions and never
+  under running copy.
 - An aura **never sits behind copy that has to be read**, with one declared
   exception: the CTA band's heading and lede sit on `.aura-cta` directly. That
   is enforced rather than asserted — `pnpm contrast` measures both inks against
@@ -571,13 +604,27 @@ a real BusinessWorks process and the Logic Apps workflow generated from it.
 
 ### Motion
 
-CSS only; there is no animation library and none should be added.
+CSS only; there is no animation library and none should be added. Scroll-linked
+motion is part of that now, and is the reason the rule can stay: native
+scroll-driven animations — `animation-timeline: view()` with `animation-range` —
+do what a site would otherwise import GSAP or Framer Motion to do, at zero
+JavaScript and inside the contract the rest of this section sets.
 
 - **Nothing gates content on scroll.** No `whileInView`, no reveal on
   intersection. This is non-negotiable #2 and it is why the previous site
   shipped an invisible mobile headline. Every reference site the client has
   offered — zenflow, auraform, aiwork, agentik — has the same defect, and
   Auraform's hero still renders blank until its appear effects fire.
+
+  The client has since asked us to match **weave.figma.com**, and that one is
+  worth naming for the opposite reason. Every element more than 1.2 viewport
+  heights below the scroll position, measured across three of its sections and
+  its footer, sits at `opacity: 1`; the only transforms present are parallax
+  `translateY` and a marquee's `translateX`. Its whole animated character comes
+  from moving things that are already painted. That is this rule, arrived at
+  independently, and it is the first reference the client has offered that does
+  not have to be borrowed selectively.
+
 - **An observer may decorate; it may not gate.** This line used to read "no
   IntersectionObserver reveals", which is the right rule stated in a way that
   also banned things that are fine. `AgentRail` uses one observer to mark which
@@ -585,21 +632,93 @@ CSS only; there is no animation library and none should be added.
   server-rendered HTML and visible on arrival; with JavaScript off the rail
   simply stops highlighting. The test is not which API is used, it is whether
   anything is invisible until you scroll.
+
+  **A scroll timeline takes the same test.** `view()` is an observer expressed
+  in CSS. It may move, light or emphasise something already painted; it may not
+  be what makes something visible.
+
 - `position: sticky` is likewise fine, and is where most of the section rhythm
   now comes from. It moves an element that is already painted.
+
+  Its companion trap is **`overflow: hidden`, which creates a scroll
+  container** — so any such ancestor becomes the scroller a `view()` inside it
+  resolves against, and since that box never scrolls the timeline resolves
+  against nothing useful. This was measured, not assumed: the same `.drift`
+  element under an `overflow: hidden` parent and an `overflow: clip` parent
+  reported different transforms at the same scroll position, and only the `clip`
+  one was correct. `overflow: clip` clips identically and is not a scroll
+  container, so every box on the site that clips for shape rather than for
+  scrolling now uses it — `Section`'s `decoration` mode, `Card`, the page
+  header, the two code figures and the hero canvas. The three that genuinely
+  scroll or mask a loop keep `hidden`.
+
 - Entrance animation is for **marks only** — hairlines, ticks, a diagram drawing
   itself — never text, and runs on load rather than on intersection.
+
+  This is an amendment, and it is a narrowing rather than a reversal. The rule
+  said "never text" and meant **entrance**: the thing it was written against is
+  a word that is not there until something fires, which is #2. A scroll-linked
+  parallax is not an entrance — it translates type that was painted at full
+  opacity before the reader arrived, stays at full opacity throughout, and is at
+  full opacity in every browser that drops the declaration. So it now reads: **an
+  entrance animation is for marks only; a continuous scroll-linked transform may
+  carry text, provided the text is never what the motion makes legible.**
+
 - Marks animate on `transform`, on `stroke-dashoffset`, or on the opacity of a
   _tint behind_ text that is already painted. Nothing that carries meaning
   starts at `opacity: 0`.
+- **Parallax moves a composition, not the parts of a connected one.** A
+  connector is a static path between two points, so the moment its endpoints
+  travel at different rates the line detaches from the things it is drawn
+  between — and there is no path that interpolates between two transforms. The
+  hero's artifact canvas therefore drifts as one rigid layer over its aura,
+  while the problem cards and the engagement row, which have no lines between
+  them, drift at three rates each. The reference draws the same line: it
+  parallaxes the layers of its scattered compositions and moves its node graph
+  as a single object.
+- **Every scroll-driven rule lives inside `@supports (animation-timeline:
+view())`, and that is not progressive enhancement.** An engine without support
+  drops the `animation-timeline` declaration and keeps the rest of the rule, so
+  `animation-name` survives; with no duration and `both` fill it runs instantly
+  as a time-based animation and parks the element on its `to` keyframe, at full
+  offset, permanently. Verified in the built stylesheet. Same shape as
+  `.text-gradient`'s `@supports`, and for the same reason: a half-applied
+  declaration renders worse than none.
+
+  **Never the `animation` shorthand in a rule that sets `animation-timeline`.**
+  The shorthand resets the timeline to `auto`. Declaring it first and the
+  timeline after survives the current toolchain — the build output was checked —
+  but that is an ordering dependency across a formatter and a minifier, not a
+  contract. Longhands have none. Every `.animate-*` class uses the shorthand and
+  must keep not setting a timeline.
+
+  As of Oct 2026 this is Chrome/Edge 115+ and Safari 26+, and **no stable
+  Firefox** — it sits behind a flag and is an Interop 2026 item. Roughly 83% of
+  visitors. Where it does not run the page is what it was before: the diagrams
+  still draw on load, the marquee and scan line still run, the rail still tracks
+  (that is an `IntersectionObserver`, which works everywhere), and only the
+  parallax sits still. So **every scroll-driven composition has to be laid out to
+  its resting state and look finished there**, and for a parallax that resting
+  state is the **midpoint** of the travel rather than an end — which is why
+  `drift-y` runs `+N` → `-N` around a static `transform: none`.
+
 - **No count-up numerals, ever.** Auraform's figures band serialises `0M+` and
   `0+` into its HTML and counts up on scroll. Our figures band is the sourced
   one, so a crawler reading `0` is the single worst bug this site could ship.
-- Three looping animations exist: the bus pulse, the specimen's scan line and
-  the platform marquee. All are switched off outright under
-  `prefers-reduced-motion` rather than left to the global guard, because an
-  infinite animation forced to a single 0.01ms iteration parks at whatever frame
-  it lands on.
+- **Two classes of animation sit outside the global `prefers-reduced-motion`
+  guard, for two different reasons, and both are switched off by hand.**
+
+  Three looping animations exist: the bus pulse, the specimen's scan line and
+  the platform marquee. All are switched off outright rather than left to the
+  global guard, because an infinite animation forced to a single 0.01ms
+  iteration parks at whatever frame it lands on.
+
+  A scroll-driven animation is the worse case, because the guard does not reach
+  it at all: progress comes from a timeline rather than from a clock, so
+  collapsing the duration changes nothing and the motion runs at full amplitude
+  for a reader who asked for none. These are gated on
+  `(prefers-reduced-motion: no-preference)` at the point of declaration, with an
+  unlayered `animation: none` behind it.
 
   This line was aspirational for a long time and is now true. The bus pulse had
   no keyframe, no utility and no usage anywhere in the tree or its history —
@@ -683,14 +802,35 @@ Still forbidden, and not negotiable:
   is an unsourced claim in a different costume.
 - A logo wall of customers we do not have. `PlatformStrip` fills that slot with
   platform names and states how much of the matrix is actually documented.
-- A decorative backdrop grid. Non-negotiable #6 names this exact element; the
-  hero uses `.aura-hero` instead, which lights the panel and claims nothing.
+- ~~A decorative backdrop grid.~~ **Reversed.** This read: "Non-negotiable #6
+  names this exact element; the hero uses `.aura-hero` instead, which lights the
+  panel and claims nothing." #6 does not name it. #6 was itself amended and now
+  reads that decorative surface is permitted and expected, and that the rule is
+  that nothing may _assert_ something untrue rather than that nothing may be
+  attractive. The grid ban was a leftover from the version of #6 that read
+  "nothing on the page is ornament" — the version four rounds of client review
+  rejected. A grid has no axis, no scale and no numeral, which is the same test
+  `concept-diagram.tsx` passes. `.blueprint` is the implementation, and it is
+  confined to the surfaces below. The client has since chosen a reference built
+  on exactly this element, so the line was not merely stale, it was contradicted
+  by the brief.
 - Glow orbs, sequential scroll fade-ups, star ratings, stock avatars, sparkle
   motifs.
 
 **Glassmorphism came off this list**, along with the ban on chromatic hero
 gradients — they are the direction now, and they are governed by the Glass and
 Auras sections rather than forbidden.
+
+**On imagery, stated plainly, because the comparison keeps being made.** The
+reference the client sent is 80 images and 8 videos of generated artwork. That is
+most of its texture, and we ship zero images — by this list and by #1, correctly,
+because a mocked dashboard is an unsourced claim in a different costume. **This
+site will never match that texture by matching that content.** What it can match,
+and what the scale work is, is the reference's size, its bleed, its type
+confidence and its abstract decoration. `.blueprint` and `.glass-form` are that
+substitute: they depict nothing, so they are decoration rather than assertion.
+A render of a product, a dashboard, a customer or a logo is none of those things
+and stays forbidden.
 
 Scroll fade-ups did **not** come off, and the reason is worth recording. Auraform
 is where the surfaces came from, and its own hero renders blank on arrival: the

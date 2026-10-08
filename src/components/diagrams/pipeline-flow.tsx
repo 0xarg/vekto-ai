@@ -76,7 +76,16 @@ function Ticks({
  * `vector-effect: non-scaling-stroke` must not be added: it stops `pathLength`
  * normalising the dash array, which is what both animations depend on.
  */
-function Bus({ orientation }: { orientation: "horizontal" | "vertical" }) {
+function Bus({
+  orientation,
+  fill = false,
+}: {
+  orientation: "horizontal" | "vertical";
+  /** Add a third stroke that fills with scroll position. Overview only — in
+   *  the rail, `current` already says where you are, and two things saying it
+   *  disagree the moment one of them lags. */
+  fill?: boolean;
+}) {
   const horizontal = orientation === "horizontal";
   const d = horizontal ? "M 0 1 L 100 1" : "M 1 0 L 1 100";
 
@@ -111,6 +120,22 @@ function Bus({ orientation }: { orientation: "horizontal" | "vertical" }) {
         strokeWidth="1"
         className="animate-bus-pulse text-accent"
       />
+      {/* A third stroke, filling as the band is read. Same normalised-dash
+          contract as the two above, driven by scroll position rather than by
+          time. Its resting state is the complete stroke, so where
+          `animation-timeline` is unsupported — Firefox stable today — this is
+          simply the drawn bus in the target pole, which is what it is at the
+          end of its range anyway. */}
+      {fill && (
+        <path
+          d={d}
+          pathLength="1"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1"
+          className="fill-on-scroll text-accent"
+        />
+      )}
     </svg>
   );
 }
@@ -134,10 +159,10 @@ function Overview() {
           the stages sit on is the more robust object, and it claims nothing
           either way. */}
       <div className="text-rule-strong pointer-events-none absolute inset-0 hidden md:block">
-        <Bus orientation="horizontal" />
+        <Bus orientation="horizontal" fill />
       </div>
       <div className="text-rule-strong pointer-events-none absolute inset-0 md:hidden">
-        <Bus orientation="vertical" />
+        <Bus orientation="vertical" fill />
       </div>
 
       {agents.map((agent, i) => (

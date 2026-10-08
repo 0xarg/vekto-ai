@@ -159,7 +159,7 @@ export function Section({
         panel ? bandPadding.default : bandPadding[density],
         !panel && bandTone[tone],
         bordered && "border-rule border-t",
-        decoration && "relative overflow-hidden",
+        decoration && "relative overflow-clip",
         className,
       )}
     >

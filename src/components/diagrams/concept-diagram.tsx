@@ -35,8 +35,12 @@ function Unfinishable() {
             width={14}
             height={9}
             rx={2}
-            fill="currentColor"
-            opacity={(i < done ? 0.85 : 0.18) * falloff}
+            /* The finished segments are the estate as it stands, so they take
+               the source pole; what is left is neutral because there is no
+               claim about it. Same move as the lit gaps below — the subject
+               carries a pole, the structure around it stays `currentColor`. */
+            fill={i < done ? "var(--legacy)" : "currentColor"}
+            opacity={(i < done ? 0.9 : 0.18) * falloff}
             className="animate-mark-in"
             style={{
               transformOrigin: `${19 + i * 19}px ${y + 4.5}px`,
@@ -68,32 +72,39 @@ function Divergent() {
     [16, 108],
     [52, 166],
   ];
+  // The widest is the subject — the spread is the point, and the span that
+  // makes it is what the eye should land on. Derived rather than indexed, so
+  // reordering `spans` cannot silently mark the wrong one.
+  const widest = spans.reduce(
+    (best, [a, b], i) => (b - a > spans[best][1] - spans[best][0] ? i : best),
+    0,
+  );
+
   return (
     <Svg label="Four estimates of the same work, each a different span, none agreeing with the others.">
       {spans.map(([x1, x2], i) => {
         const y = 24 + i * 21;
+        const subject = i === widest;
         return (
-          <g key={i}>
+          <g key={i} stroke={subject ? "var(--legacy)" : "currentColor"}>
             <line
               x1={x1}
               y1={y}
               x2={x2}
               y2={y}
-              stroke="currentColor"
-              opacity={0.55}
+              opacity={subject ? 1 : 0.5}
               pathLength={1}
               className="animate-draw"
               style={{ animationDelay: `${i * 130}ms` }}
               {...stroke}
-              strokeWidth={2}
+              strokeWidth={subject ? 2.5 : 2}
             />
             <line
               x1={x1}
               y1={y - 5}
               x2={x1}
               y2={y + 5}
-              stroke="currentColor"
-              opacity={0.55}
+              opacity={subject ? 1 : 0.5}
               {...stroke}
             />
             <line
@@ -101,8 +112,7 @@ function Divergent() {
               y1={y - 5}
               x2={x2}
               y2={y + 5}
-              stroke="currentColor"
-              opacity={0.55}
+              opacity={subject ? 1 : 0.5}
               {...stroke}
             />
           </g>

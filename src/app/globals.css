@@ -785,12 +785,34 @@
      never overflow on small screens — the exact failure mode of the old site.
      The range between display and h3 is deliberately wide: hierarchy comes
      from size, so headings can all stay at a single weight. */
-  --text-display: clamp(2.5rem, 1.6rem + 3.3vw, 4.5rem);
-  --text-display--line-height: 1.06;
-  --text-display--letter-spacing: -0.02em;
+  /* The cap went 4.5rem -> 5.75rem and the line-height 1.06 -> 0.95. Both
+     halves matter and the second does most of the work: a 92px headline at
+     1.06 is a large paragraph, the same headline at 0.95 is a mark.
+     `--text-numeral` has been at 0.95 since it was written, which is the
+     precedent rather than a coincidence — it is the other token set at the
+     size of a subject.
 
-  --text-h1: clamp(2rem, 1.45rem + 2.6vw, 3.5rem);
-  --text-h1--line-height: 1.08;
+     0.95 is a floor, not a taste. The reference sets its own display at 0.85,
+     which it can because every one of its phrases is a single line and no two
+     lines can collide. Ours wrap, and below 0.95 the descender of "legacy"
+     meets the cap height of the line under it.
+
+     5.75rem is measured. Both hero phrases were set in Inter at a range of
+     sizes and column widths in the live page: at the old 144px gutter the
+     split breaks at 88px, where the long phrase goes to three lines and the
+     short one stays at two. At the gutter in `container.tsx` the columns are
+     ~716px and both hold at two lines at 92px. The small end is untouched, so
+     320px still renders at the 2.5rem floor and nothing about the phone
+     layout moves. */
+  --text-display: clamp(2.5rem, 1.5rem + 4.4vw, 5.75rem);
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.032em;
+
+  /* Interior pages. It rises, but far less than display: raising this to match
+     would make seventeen routes shout, and the step between a homepage hero
+     and a page header is supposed to be audible. */
+  --text-h1: clamp(2rem, 1.45rem + 3vw, 4rem);
+  --text-h1--line-height: 1.02;
   --text-h1--letter-spacing: -0.018em;
 
   --text-h2: clamp(1.5rem, 1.25rem + 1.3vw, 2.25rem);
@@ -1148,6 +1170,42 @@
         rgb(168 85 247 / 0.39) 0%,
         transparent 72%
       );
+  }
+
+  /* The same aura, faded in from one edge instead of filling its box.
+   *
+   * This exists because of a bug worth recording. `PageHeader` needed the aura
+   * kept off its copy, and the first attempt did that by clipping the element
+   * to `left-[52%]` — which drew a hard vertical seam down the middle of every
+   * interior page. The reason is the first line of `.aura-hero`: it paints a
+   * solid `background-color` under its three ellipses, so the edge of the box
+   * is an edge of flat lavender against `--ground`, no matter how soft the
+   * gradients inside it are. Clipping an aura is never going to work; it has to
+   * be masked, because a mask takes the base colour with it.
+   *
+   * The ellipse reaches from 45% to the right edge, so the band's breadcrumbs,
+   * eyebrow and lede — which sit inside `max-w-2xl`, about 44% — have exactly
+   * zero aura behind them rather than a little. The `h1`'s tail does cross into
+   * it, and that is allowed: `--ink` is the one ink an aura carries, measured
+   * at 7.56:1, and the two that are not are reported by `pnpm contrast` on
+   * every run.
+   *
+   * `-webkit-mask-image` is still worth carrying: the unprefixed property is
+   * widely supported now, but a dropped mask here fails open — to the full
+   * box, which is the seam this is fixing. */
+  .aura-faded {
+    -webkit-mask-image: radial-gradient(
+      ellipse 55% 130% at 100% 40%,
+      #000 0%,
+      #000 18%,
+      transparent 78%
+    );
+    mask-image: radial-gradient(
+      ellipse 55% 130% at 100% 40%,
+      #000 0%,
+      #000 18%,
+      transparent 78%
+    );
   }
 
   /* The hero aura on a dark page. It keeps its own three ellipse geometries —
@@ -1546,5 +1604,290 @@
     .animate-bus-pulse {
       display: none;
     }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll-driven motion.
+
+   This is an amendment. The block above used to be the whole motion layer, and
+   the rule next to it read that entrance animation is for marks only and runs
+   on load rather than on intersection. The client asked for the motion on
+   weave.figma.com, and that site was measured rather than taken on reputation:
+   every element more than 1.2 viewport-heights below the scroll position, across
+   three sections and the footer, sits at `opacity: 1`. Its whole animated
+   character is parallax and scrubbed state on content that is already painted.
+
+   So the amended rule is about visibility rather than about which elements may
+   move: motion may move anything, it may not hide anything. Non-negotiable #2
+   is untouched, and the reference vindicates it rather than reversing it.
+
+   Three things make that structural rather than a matter of review:
+
+   1. Every keyframe below is written so its RESTING state is the visible, final
+      state. `drift-y` is symmetric around zero, so an element that never
+      animates sits exactly where the layout put it. Nothing starts at
+      `opacity: 0` and nothing can.
+   2. `animation-timeline` is unsupported in Firefox stable — it is behind
+      `layout.css.scroll-driven-animations.enabled` and is an Interop 2026
+      item, so this is roughly 83% of traffic. There the declaration is dropped
+      and the page is exactly what it was before this block existed: diagrams
+      still draw on load, the rail still tracks (that is an
+      IntersectionObserver, which works everywhere), and only the parallax sits
+      still. That degradation is the reason this is the right primitive and not
+      a compromise.
+   3. No animation library. Zero bytes, no client boundary, no scroll listener.
+      The reference needs GSAP, Lenis and Webflow IX2 to do this.
+
+   `--drift`, `--mark-w` and `--rail-progress` are per-element properties set
+   inline from TSX, never declared here. `scripts/contrast.mjs` lints for
+   `var()` references to tokens declared nowhere and does NOT respect fallbacks,
+   so all three are allowlisted in its EXTERNAL_TOKENS, next to `--chip-wash`
+   which is the same case.
+   --------------------------------------------------------------------------- */
+
+/* Parallax within a composition. `from` and `to` are symmetric around zero so
+   the resting state is the midpoint — where this does not run, the element
+   never leaves 0 and the composition sits exactly as it was authored. The rate
+   is the caller's `--drift`, which is what lets layers of one composition
+   travel at different speeds rather than moving as a block. */
+@keyframes drift-y {
+  from {
+    transform: translateY(var(--drift, 1.5rem));
+  }
+  to {
+    transform: translateY(calc(var(--drift, 1.5rem) * -1));
+  }
+}
+
+/* A mark travelling a track, for the source-to-target scrub. Offsetting the end
+   by the mark's own width keeps it inside the track at full travel; `--mark-w`
+   is the caller's, because only the caller knows how wide its mark is. */
+@keyframes traverse-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% - var(--mark-w, 1rem)));
+  }
+}
+
+/* A stroke filling as its band is read. Same `pathLength="1"` contract as
+   `draw-on` — the dash length is normalised, so nothing has to measure a path —
+   driven by scroll position instead of by time. It finishes at the complete
+   stroke, so where it does not run the stroke is simply drawn. */
+@keyframes fill-stroke {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Longhands throughout, and the `@supports` is not progressive enhancement —
+ * both are load-bearing, and both were established by measurement rather than
+ * by caution.
+ *
+ * On the guard. An engine without support drops the `animation-timeline`
+ * declaration and keeps the rest of the rule, so `animation-name` survives. The
+ * shorthand emits no duration, which means `0s`, and `both` fill — so the
+ * animation runs instantly as a time-based one and parks the element on its
+ * `to` keyframe, at full parallax offset, permanently. The resting state is
+ * only the midpoint while nothing runs at all. Verified in the built
+ * stylesheet: `animation:linear both drift-y` with no duration is what Tailwind
+ * emits. This is the same shape of bug `.text-gradient`'s `@supports` exists
+ * for, where an unsupported `background-clip: text` leaves a transparent fill
+ * over nothing.
+ *
+ * On the longhands. The `animation` shorthand resets `animation-timeline` to
+ * `auto`. Declaring the shorthand first and the timeline after survives
+ * Lightning CSS today — the built CSS was checked — but that is an ordering
+ * dependency across a formatter and a minifier, not a contract. Longhands have
+ * no ordering to get wrong. Every `.animate-*` class above uses the shorthand
+ * and must keep not setting a timeline.
+ *
+ * Off below `lg`, for the same reason `AgentRail` unpins there: parallax on a
+ * phone moves the thing you are trying to read.
+ *
+ * `prefers-reduced-motion` is handled here rather than by the global guard in
+ * `@layer base`, which cannot reach this class of animation at all — see the
+ * note at the end of the block. */
+@supports (animation-timeline: view()) {
+  @media (min-width: 64rem) and (prefers-reduced-motion: no-preference) {
+    /* `cover` rather than `entry`/`exit`: a parallax layer should be moving the
+       whole time its composition is on screen, not only as it crosses an
+       edge. */
+    .drift {
+      animation-name: drift-y;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    /* Inset from the ends of `cover` rather than keyed to `entry`/`exit`. The
+       figure is shorter than the viewport, so an entry-to-exit range resolves
+       to a narrow band near the middle and the mark completes its travel in a
+       few hundred pixels of scroll — it reads as a jump rather than as a
+       crossing. Starting and ending inside `cover` gives it the whole time the
+       figure is on screen, and the inset keeps both ends of the travel visible
+       rather than happening off the edge. */
+    .traverse {
+      animation-name: traverse-x;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: cover 15% cover 85%;
+    }
+
+    .fill-on-scroll {
+      stroke-dasharray: 1;
+      animation-name: fill-stroke;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 90% cover 60%;
+    }
+  }
+}
+
+/* The global reduced-motion guard in `@layer base` cannot reach any of the
+ * above, and this is a different failure from the one the three looping
+ * animations have. That guard collapses every animation to a single 0.01ms
+ * iteration; an infinite animation forced to one 0.01ms iteration parks
+ * wherever it lands, which is why those three are switched off outright. A
+ * scroll-driven animation ignores duration entirely — its progress comes from
+ * a timeline rather than from a clock — so collapsing the duration changes
+ * nothing at all and the motion runs at full amplitude for a reader who asked
+ * for none.
+ *
+ * The `@media (prefers-reduced-motion: no-preference)` above is what actually
+ * switches them off. This block is the belt: unlayered, so it beats the
+ * utility layer whatever Tailwind decides to do with ordering, and it names
+ * `animation` rather than `animation-name` so a stale timeline cannot be left
+ * attached to nothing. */
+@media (prefers-reduced-motion: reduce) {
+  .drift,
+  .traverse,
+  .fill-on-scroll {
+    animation: none;
+  }
+}
+
+/* The field behind the agent rail.
+ *
+ * Weave's pinned-list section crossfades a different full-bleed image behind
+ * each item. The equivalent here is deliberately ONE hue that moves rather than
+ * five that swap: giving each stage its own `--tint-*` would make a decorative
+ * tint stand for a concept, which the tints block forbids outright and which
+ * would cost the migration diagrams their readability. A single accent field
+ * travelling down the band states position in a sequence — the same thing the
+ * rail's active dot already states, in the pole that already means it.
+ *
+ * `--rail-progress` is set inline by `agent-rail.tsx` from the same `current`
+ * the IntersectionObserver drives, so this cannot disagree with the dot. It
+ * moves `top` rather than a gradient stop because a gradient position inside a
+ * `var()` cannot be transitioned, and a field that jumps between stages reads
+ * as a bug.
+ *
+ * It is decoration and nothing else: every panel stays at full opacity, and
+ * with JavaScript off `--rail-progress` stays 0 and the field simply sits at
+ * the first stage. The global reduced-motion guard collapses the transition to
+ * 0.01ms, which for this is the correct resting behaviour — the field is in the
+ * right place, it just arrives there without travelling. */
+@layer components {
+  .rail-field {
+    position: absolute;
+    top: calc(var(--rail-progress, 0) * 100%);
+    left: 0;
+    width: 100%;
+    height: 56%;
+    transform: translateY(-50%);
+    background: radial-gradient(
+      58% 50% at 20% 50%,
+      var(--accent-soft) 0%,
+      transparent 72%
+    );
+    transition: top 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The blueprint grid.
+
+   This is an amendment, and it reverses a line on the forbidden list outright.
+   That line read: "A decorative backdrop grid. Non-negotiable #6 names this
+   exact element; the hero uses `.aura-hero` instead, which lights the panel and
+   claims nothing."
+
+   #6 does not name it. #6 was itself amended, and now reads that "decorative
+   surface is permitted and expected — gradients, tints, icon chips, graphic
+   zones, bento cells. The rule is that nothing may ASSERT something untrue, not
+   that nothing may be attractive." The grid ban is a leftover from the version
+   of #6 that read "nothing on the page is ornament", which four rounds of
+   client review rejected. A grid asserts nothing: it has no axis, no scale and
+   no numeral, which is the same test `concept-diagram.tsx` is held to.
+
+   The client has since chosen a reference built on exactly this element, so the
+   line is not merely stale, it is contradicted by the brief.
+
+   It resolves through `--rule`, so it re-themes with everything else and
+   carries no hex. The mask fades it out before it reaches the edges — without
+   that it reads as graph paper rather than as a field.
+
+   Where it may go: behind panels, figures and compositions. NOT under running
+   copy. `scripts/contrast.mjs` measures a hand-maintained list of four auras
+   and nothing else, so a background layer under text is not checked — it would
+   be unmeasured rather than failing, which is worse. The one pair this does
+   owe, `--ink` and `--ink-muted` against `--rule`, is in the report.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .blueprint {
+    background-image:
+      linear-gradient(to right, var(--rule) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+    background-size: 4rem 4rem;
+    background-position: center center;
+    /* The mask is an alpha channel, not a colour — `#000` here means "fully
+       opaque", not "black", which is why it is not a non-negotiable #5
+       violation. There is no token form of an alpha stop. */
+    -webkit-mask-image: radial-gradient(
+      ellipse 75% 65% at 50% 45%,
+      #000 25%,
+      transparent 78%
+    );
+    mask-image: radial-gradient(
+      ellipse 75% 65% at 50% 45%,
+      #000 25%,
+      transparent 78%
+    );
+  }
+
+  /* A soft form with an edge, rather than a wash.
+   *
+   * The auras are already gradient meshes; what makes the reference's chrome
+   * objects read as objects is that they have a boundary and a specular edge.
+   * This is the same material given both. It depicts nothing — there is no
+   * object here, only a light model — which is what keeps it inside #6 while a
+   * rendered product screenshot would not be.
+   *
+   * It is deliberately not a new palette: both stops resolve from
+   * `--accent-glow`, the same triple every shadow on the site is mixed from. */
+  .glass-form {
+    background-image:
+      radial-gradient(
+        closest-side at 32% 30%,
+        rgb(var(--accent-glow) / 0.16) 0%,
+        rgb(var(--accent-glow) / 0.05) 55%,
+        transparent 100%
+      ),
+      radial-gradient(
+        closest-side at 68% 72%,
+        rgb(var(--accent-glow) / 0.1) 0%,
+        transparent 100%
+      );
+    filter: blur(2px);
   }
 }

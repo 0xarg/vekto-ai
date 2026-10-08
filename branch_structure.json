@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "main",
+    "motion-and-scale",
+    "redesign"
+  ],
+  "parent": {
+    "main": null,
+    "motion-and-scale": "main",
+    "redesign": "main"
+  },
+  "order": [
+    "main",
+    "motion-and-scale",
+    "redesign"
+  ]
+}

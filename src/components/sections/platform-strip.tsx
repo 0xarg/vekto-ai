@@ -30,6 +30,15 @@ import { Label } from "@/components/ui/label";
  * targets, which is the same direction-of-travel encoding the rest of the site
  * uses. `platforms.ts` carries no logo, icon or colour field, so this is type —
  * which is the honest version of this band anyway.
+ *
+ * And because it is type, it is set at the size type gets when it IS the
+ * subject. This band is the direct analogue of the reference's "use all the
+ * models" section, which sets the same kind of list at 94px and gives it a
+ * screen; ours was seven words at 18px in a strip you could miss. The names
+ * are the content here — there is nothing else in the band — so they take the
+ * display face at a size between `h2` and `display`. Nothing about what is
+ * claimed changed: the count beside them still says how much of the matrix is
+ * actually documented, and that is still the first thing the band says.
  */
 function Row({
   platforms,
@@ -46,12 +55,12 @@ function Row({
   const half = (hidden?: boolean) => (
     <ul
       aria-hidden={hidden}
-      className="flex shrink-0 items-center gap-x-10 pr-10 sm:gap-x-14 sm:pr-14"
+      className="flex shrink-0 items-center gap-x-12 pr-12 sm:gap-x-16 sm:pr-16"
     >
       {platforms.map((p) => (
         <li
           key={p.id}
-          className={`text-lg font-medium whitespace-nowrap ${
+          className={`font-display text-[clamp(1.75rem,1.1rem+2.4vw,3.25rem)] leading-none font-semibold tracking-[-0.025em] whitespace-nowrap ${
             tone === "legacy" ? "text-legacy" : "text-accent"
           }`}
         >
@@ -79,7 +88,7 @@ export function PlatformStrip() {
     <section
       data-band
       data-tone="ground"
-      className="border-rule py-band-tight border-y"
+      className="border-rule py-band border-y"
     >
       <Container width="wide">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-14">
@@ -91,7 +100,7 @@ export function PlatformStrip() {
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-5 sm:gap-7">
             <Row platforms={sourcePlatforms} tone="legacy" />
             <Row platforms={targetPlatforms} tone="accent" reverse />
           </div>

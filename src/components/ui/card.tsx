@@ -78,10 +78,10 @@ export function Card({
   const classes = cn(
     "group flex flex-col",
     variant === "raised" &&
-      "sheen border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
+      "sheen border-rule rounded-lg border shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-clip",
     variant === "raised" && (washed && tint ? "shadow-tint" : "bg-surface"),
     variant === "glass" &&
-      "glass rounded-lg transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-hidden",
+      "glass rounded-lg transition-[transform,box-shadow,border-color] duration-200 ease-out overflow-clip",
     variant === "ruled" && "transition-colors hover:bg-surface-2",
     // Only a card that goes somewhere lifts. A static one rising under the
     // cursor promises a click that is not there.
